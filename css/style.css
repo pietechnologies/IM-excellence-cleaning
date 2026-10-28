@@ -390,6 +390,39 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .social-group .footer-social a:hover { color: var(--accent); }
 .footer-bottom { margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.12); text-align: center; font-size: 0.875rem; color: #64748b; }
 
+/* ---------- Map / Location ---------- */
+.map-section {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 40px;
+  align-items: start;
+  margin-top: 24px;
+}
+.map-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  background: var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+.map-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.map-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.map-actions .btn { width: 100%; }
+.map-hint { font-size: 0.825rem; color: var(--muted); margin-top: 6px; text-align: center; }
+
 /* ---------- Popup ---------- */
 .popup-overlay {
   position: fixed; inset: 0; z-index: 1000;
@@ -440,6 +473,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   .area-checker { grid-template-columns: 1fr; gap: 32px; }
   .area-map { display: none; }
   .contact-inner { grid-template-columns: 1fr; gap: 32px; }
+  .map-section { grid-template-columns: 1fr; gap: 24px; }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .footer-brand { text-align: center; }
   .footer-brand p { margin: 0 auto; }
