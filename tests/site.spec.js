@@ -316,3 +316,65 @@ test("automatic popup still works when session storage is unavailable", async ({
   await page.clock.fastForward(30000);
   await expect(page.locator("#offer-dialog")).not.toBeVisible();
 });
+
+for (const width of [390, 1440]) {
+  test(`GitHub Pages project path loads matching styles and scripts at ${width}px despite old asset caches`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const legacyRequests = [];
+    const failed = [];
+    // Simulate browsers/proxies retaining the previous unversioned assets.
+    await page.route(
+      /\/(css\/style\.css|js\/main\.js)(\?.*)?$/,
+      async (route) => {
+        const url = new URL(route.request().url());
+        if (!url.searchParams.has("v")) {
+          legacyRequests.push(url.href);
+          await route.fulfill({
+            contentType: url.pathname.endsWith(".css")
+              ? "text/css"
+              : "text/javascript",
+            body: url.pathname.endsWith(".css")
+              ? ".hero-grid { display: block; }"
+              : "// stale script",
+          });
+        } else {
+          await route.continue();
+        }
+      },
+    );
+    page.on("response", (response) => {
+      if (response.status() >= 400) failed.push(response.url());
+    });
+    await page.goto("/IM-excellence-cleaning/");
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator(".hero-grid")).toHaveCSS("display", "grid");
+    await expect(page.locator("body")).toHaveCSS("color", "rgb(23, 47, 62)");
+    await expect(page.locator(".hero-image")).toHaveCSS("object-fit", "cover");
+    expect(
+      await page.evaluate(() => document.fonts.check("400 14px Manrope")),
+    ).toBe(true);
+    const assets = await page.evaluate(() => ({
+      stylesheet: document.querySelector('link[rel="stylesheet"]').href,
+      script: document.querySelector("script[src]").src,
+      image: document.querySelector(".hero-image").src,
+    }));
+    expect(assets.stylesheet).toMatch(
+      /\/IM-excellence-cleaning\/css\/style\.css\?v=[a-f0-9]{12}$/,
+    );
+    expect(assets.script).toMatch(
+      /\/IM-excellence-cleaning\/js\/main\.js\?v=[a-f0-9]{12}$/,
+    );
+    expect(assets.image).toContain("/IM-excellence-cleaning/assets/");
+    await completeSpace(page);
+    await expect(page.locator('#booking-form [data-step="2"]')).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    expect(legacyRequests).toEqual([]);
+    expect(failed).toEqual([]);
+  });
+}
