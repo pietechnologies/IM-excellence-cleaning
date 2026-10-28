@@ -74,3 +74,28 @@ The suite covers links and assets, both form steps, validation, Enter-key behavi
 ## GitHub Pages
 
 Publish the repository root using your normal Pages branch configuration. No build output is required. All local asset links are relative for subpath compatibility.
+
+## Deployment cache safety
+
+`index.html` loads the stylesheet and script with SHA-256 content versions
+(`css/style.css?v=…` and `js/main.js?v=…`). This prevents an old cached stylesheet
+or script from being reused with redesigned HTML. Asset paths remain relative,
+including font URLs inside the CSS, so project Pages and custom domains work.
+
+After changing `css/style.css` or `js/main.js`, run:
+
+```sh
+npm run version:assets
+npm test
+```
+
+Commit the updated `index.html` with those changes. `npm run check:assets` and the
+Site checks workflow reject mismatched asset versions. No build step is required
+on Pages; keep the existing **main / root** publishing configuration.
+
+Browser tests also serve the site at `/IM-excellence-cleaning/`, simulate stale
+unversioned assets, and check that the versioned CSS, fonts, imagery, and form
+scripts still load on desktop and mobile. Merge the fix into `main` to publish;
+changes on a working branch do not update the live site. When checking a release,
+wait for the Pages deployment to finish and refresh the page. If a browser still
+shows an older document, use a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).

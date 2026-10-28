@@ -5,7 +5,9 @@
   "description": "Dependency-free, GitHub Pages-ready cleaning services website",
   "scripts": {
     "start": "python3 -m http.server 3000 --bind 0.0.0.0",
-    "test": "playwright test"
+    "test": "npm run check:assets && playwright test",
+    "version:assets": "node scripts/version-assets.js",
+    "check:assets": "node scripts/version-assets.js --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
