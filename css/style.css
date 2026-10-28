@@ -88,9 +88,11 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   background: var(--primary);
   color: var(--white);
   box-shadow: var(--shadow-sm);
+  text-shadow: none;
+  filter: none;
 }
-.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow); }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:hover { background: var(--primary-dark); box-shadow: var(--shadow-sm); }
+.btn-primary:active { transform: none; }
 .btn-outline {
   border: 2px solid var(--gray-200);
   color: var(--dark);
@@ -100,6 +102,13 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .btn-large { padding: 16px 32px; font-size: 1.05rem; }
 .btn-block { width: 100%; }
 .mt-sm { margin-top: 10px; }
+
+/* Crisp text rendering */
+.btn, button, a, input, select, textarea {
+  text-shadow: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 /* ---------- Navbar ---------- */
 .navbar {
@@ -382,9 +391,11 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 
 /* ---------- Footer ---------- */
 .footer { background: var(--dark); color: var(--white); padding: 64px 0 28px; border-top: 1px solid rgba(255,255,255,0.08); }
-.footer-inner { display: grid; grid-template-columns: 300px repeat(3, 1fr); gap: 40px; align-items: start; }
-.footer-brand img { height: 36px; width: auto; margin-bottom: 14px; }
-.footer-brand p { color: #94a3b8; font-size: 0.925rem; line-height: 1.7; max-width: 260px; }
+.footer-inner { display: grid; grid-template-columns: 1fr; gap: 36px; align-items: start; }
+.footer-brand { text-align: center; }
+.footer-brand img { height: 36px; width: auto; margin: 0 auto 14px; display: block; }
+.footer-brand p { color: #94a3b8; font-size: 0.925rem; line-height: 1.7; max-width: 260px; margin: 0 auto; }
+.footer-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 36px; }
 .footer-links h4 { font-size: 1rem; font-weight: 800; margin-bottom: 18px; color: var(--white); }
 .footer-links ul { display: flex; flex-direction: column; gap: 12px; }
 .footer-links a { color: #94a3b8; font-size: 0.95rem; transition: color 0.2s; }
@@ -396,6 +407,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   display: flex;
   flex-direction: column;
   gap: 12px;
+  align-items: center;
 }
 .social-group .footer-social a {
   display: inline-flex;
