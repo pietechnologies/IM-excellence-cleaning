@@ -1,0 +1,14 @@
+{
+  "name": "im-excellence-cleaning",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dependency-free, GitHub Pages-ready cleaning services website",
+  "scripts": {
+    "start": "python3 -m http.server 3000 --bind 0.0.0.0",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.56.0"
+  }
+}
