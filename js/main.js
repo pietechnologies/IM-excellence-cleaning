@@ -1,243 +1,377 @@
-/* ============================================================
-   IM Excellence Cleaning — Site Scripts
-   - Mobile nav
-   - Sticky navbar
-   - Zip code service-area checker
-   - Auto popup form after 10–15 seconds (once per session)
-   - Contact / popup form handling (no backend; demo-ready)
-   ============================================================ */
+/* Static, dependency-free interactions for IM Excellence Cleaning. */
+(() => {
+  "use strict";
 
-(function () {
-  'use strict';
-
-  // ---------- Elements ----------
-  const navToggle = document.querySelector('.nav-toggle');
-  const navMenu = document.querySelector('.nav-menu');
-  const navbar = document.querySelector('.navbar');
-  const navLinks = document.querySelectorAll('.nav-menu a');
-
-  const zipInput = document.getElementById('zipcode');
-  const checkZipBtn = document.getElementById('check-zip');
-  const zipResult = document.getElementById('zip-result');
-
-  const bookingForm = document.getElementById('booking-form');
-  const formMessage = document.getElementById('form-message');
-  const formSubmit = document.getElementById('form-submit');
-
-  const popup = document.getElementById('popup');
-  const popupClose = document.querySelector('.popup-close');
-  const popupForm = document.getElementById('popup-form');
-  const popupMessage = document.getElementById('popup-message');
-  const popupSubmit = document.getElementById('popup-submit');
-
-  // ---------- Service area data ----------
-  // UPDATE THIS LIST with the real zip codes IM Excellence Cleaning serves.
-  const SERVED_ZIPS = new Set([
-    '10001','10002','10003','10004','10005','10006','10007','10009','10010',
-    '10011','10012','10013','10014','10016','10017','10018','10019','10020',
-    '10021','10022','10023','10024','10025','10026','10027','10028','10029',
-    '10030','10031','10032','10033','10034','10035','10036','10037','10038',
-    '10039','10040','10044','10065','10069','10075','10128','10070','10019',
-    '90001','90002','90003','90004','90005','90006','90007','90008','90010',
-    '90011','90012','90013','90014','90015','90016','90017','90018','90019',
-    '90020','90021','90023','90024','90025','90026','90027','90028','90029',
-    '90031','90032','90033','90034','90035','90036','90037','90038','90039',
-    '90040','90041','90042','90043','90044','90045','90046','90047','90048',
-    '90049','90057','90061','90062','90063','90064','90066','90067','90068',
-    '90069','90071','90077','90094','90210','90211','90212','90230','90232',
-    '90245','90250','90265','90272','90277','90278','90280','90291','90292',
-    '60007','60018','60056','60077','60601','60602','60603','60604','60605',
-    '60606','60607','60608','60609','60610','60611','60612','60613','60614',
-    '60615','60616','60617','60618','60619','60620','60621','60622','60623',
-    '60624','60625','60626','60628','60629','60630','60631','60632','60634',
-    '60636','60637','60638','60639','60640','60641','60642','60643','60644',
-    '60645','60646','60647','60649','60651','60652','60653','60654','60655',
-    '60656','60657','60659','60660','60661','33101','33109','33125','33126',
-    '33127','33128','33129','33130','33131','33132','33133','33134','33135',
-    '33136','33137','33138','33139','33140','33141','33142','33143','33145',
-    '33146','33147','33149','33150','33154','33155','33156','33157','33161',
-    '33165','33166','33167','33168','33169','33170','33172','33173','33174',
-    '33175','33176','33177','33178','33179','33180','33181','33182','33183',
-    '33184','33185','33186','33187','33189','33190','33193','33194','33196'
-  ]);
-
-  const ZIP_ERRORS = {
-    required: 'Please enter your zip code.',
-    invalid: 'Please enter a valid 5-digit zip code.',
+  const navToggle = document.querySelector(".nav-toggle");
+  const navMenu = document.querySelector(".nav-menu");
+  const offerDialog = document.getElementById("offer-dialog");
+  const bookingForm = document.getElementById("booking-form");
+  const serviceNames = {
+    residential: "Residential cleaning",
+    deep: "Deep cleaning",
+    move: "Move-in / move-out",
+    commercial: "Commercial cleaning",
   };
+  const emailAddress = "hello@imexcellencecleaning.com";
+  const controllers = new Map();
 
-  // ---------- Helpers ----------
-  function setResult(el, text, type) {
-    el.textContent = text;
-    el.className = 'result ' + (type || 'info');
+  function closeMenu(returnFocus = false) {
+    navMenu.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "Open navigation");
+    if (returnFocus) navToggle.focus();
   }
 
-  function isValidZip(value) {
-    return /^\d{5}$/.test(String(value).trim());
-  }
-
-  function checkZip(zip) {
-    zip = String(zip).trim();
-    if (!zip) {
-      setResult(zipResult, ZIP_ERRORS.required, 'error');
-      return;
-    }
-    if (!isValidZip(zip)) {
-      setResult(zipResult, ZIP_ERRORS.invalid, 'error');
-      return;
-    }
-    if (SERVED_ZIPS.has(zip)) {
-      setResult(zipResult, 'Great news! We service zip code ' + zip + '. Book your cleaning today.', 'success');
-    } else {
-      setResult(zipResult, 'Zip code ' + zip + ' is not in our current service area. We are expanding soon — check back or call us!', 'error');
-    }
-  }
-
-  // ---------- Zip checker interactions ----------
-  if (checkZipBtn && zipInput && zipResult) {
-    checkZipBtn.addEventListener('click', () => checkZip(zipInput.value));
-
-    zipInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); checkZip(zipInput.value); }
-    });
-
-    zipInput.addEventListener('input', () => {
-      zipResult.textContent = '';
-      zipResult.className = 'result';
-    });
-  }
-
-  // ---------- Mobile nav ----------
-  if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => {
-      const isOpen = navMenu.classList.toggle('open');
-      navToggle.setAttribute('aria-expanded', isOpen);
-    });
-
-    navLinks.forEach((link) => {
-      link.addEventListener('click', () => {
-        navMenu.classList.remove('open');
-        navToggle.setAttribute('aria-expanded', 'false');
-      });
-    });
-  }
-
-  // Close mobile menu on escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (navMenu) navMenu.classList.remove('open');
-      if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
-      closePopup();
-    }
+  navToggle.addEventListener("click", () => {
+    const open = navMenu.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", String(open));
+    navToggle.setAttribute(
+      "aria-label",
+      open ? "Close navigation" : "Open navigation",
+    );
   });
+  navMenu
+    .querySelectorAll("a")
+    .forEach((link) => link.addEventListener("click", () => closeMenu()));
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".nav-inner")) closeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && navMenu.classList.contains("open"))
+      closeMenu(true);
+  });
+  window
+    .matchMedia("(min-width: 861px)")
+    .addEventListener("change", (event) => {
+      if (event.matches) closeMenu();
+    });
 
-  // ---------- Sticky navbar shadow on scroll ----------
-  if (navbar) {
-    const updateNavbar = () => {
-      if (window.scrollY > 20) {
-        navbar.style.boxShadow = 'var(--shadow-sm)';
-      } else {
-        navbar.style.boxShadow = '';
-      }
-    };
-    window.addEventListener('scroll', updateNavbar, { passive: true });
-    updateNavbar();
+  // Show the offer once per tab session, 10–15 seconds after arrival.
+  // Storage may be blocked in private/embedded browsers; the in-memory flag
+  // still prevents repeated automatic popups on the current page.
+  const offerSessionKey = "imex_offer_shown";
+  let offerShown = false;
+  let autoOfferDue = false;
+  let formStarted = false;
+  let offerTimer;
+  try {
+    offerShown = sessionStorage.getItem(offerSessionKey) === "1";
+  } catch {
+    // Keep the popup functional even when browser storage is unavailable.
   }
 
-  // ---------- Popup form ----------
-  const POPUP_KEY = 'imex_popup_shown';
-  const POPUP_DELAY_MIN = 10000; // 10 seconds
-  const POPUP_DELAY_MAX = 15000; // 15 seconds
-
-  function openPopup() {
-    if (popup) popup.classList.add('open');
-    popup.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+  function openOffer() {
+    if (offerDialog.open) return;
+    clearTimeout(offerTimer);
+    autoOfferDue = false;
+    closeMenu();
+    offerDialog.showModal();
+    document.body.classList.add("dialog-open");
+    offerShown = true;
+    try {
+      sessionStorage.setItem(offerSessionKey, "1");
+    } catch {
+      // The in-memory flag is sufficient for this page view.
+    }
   }
 
-  function closePopup() {
-    if (popup) popup.classList.remove('open');
-    popup.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+  function maybeOpenAutoOffer() {
+    if (!autoOfferDue || offerShown || formStarted || document.hidden) return;
+    // Don't steal focus while visitors are typing or navigating the mobile menu.
+    if (
+      document.activeElement?.matches("input, select, textarea") ||
+      navMenu.classList.contains("open")
+    )
+      return;
+    openOffer();
   }
 
-  function schedulePopup() {
-    const delay = Math.floor(Math.random() * (POPUP_DELAY_MAX - POPUP_DELAY_MIN + 1)) + POPUP_DELAY_MIN;
-    setTimeout(() => {
-      const alreadyShown = localStorage.getItem(POPUP_KEY) === '1';
-      if (!alreadyShown) openPopup();
+  if (!offerShown) {
+    const delay = 10000 + Math.floor(Math.random() * 5001);
+    offerTimer = setTimeout(() => {
+      autoOfferDue = true;
+      maybeOpenAutoOffer();
     }, delay);
   }
-
-  // Close on outside click
-  if (popup) {
-    popup.addEventListener('click', (e) => {
-      if (e.target === popup) closePopup();
-    });
-  }
-
-  if (popupClose) {
-    popupClose.addEventListener('click', closePopup);
-  }
-
-  // Schedule the auto popup once DOM is ready
-  if (popup) schedulePopup();
-
-  // ---------- Form submission helpers ----------
-  function submitFormDemo(form, submitBtn, messageEl, onSuccess) {
-    if (!form) return;
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!submitBtn || !messageEl) return;
-
-      // Simple client-side validation
-      const required = form.querySelectorAll('[required]');
-      let missing = null;
-      required.forEach((field) => {
-        if (!field.value.trim()) missing = field;
-      });
-      if (missing) {
-        missing.focus();
-        setResultMsg(messageEl, 'Please fill out all required fields.', 'error');
-        return;
-      }
-
-      // Email validation when present
-      const emailField = form.querySelector('input[type="email"]');
-      if (emailField && emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
-        emailField.focus();
-        setResultMsg(messageEl, 'Please enter a valid email address.', 'error');
-        return;
-      }
-
-      // Simulate network request
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending…';
-
-      setTimeout(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-        setResultMsg(messageEl, 'Thanks! Your request has been sent. We’ll contact you shortly.', 'success');
-        form.reset();
-        if (onSuccess) onSuccess();
-      }, 1200);
-    });
-  }
-
-  function setResultMsg(el, text, type) {
-    el.textContent = text;
-    el.className = 'form-message ' + (type || '');
-  }
-
-  submitFormDemo(bookingForm, formSubmit, formMessage);
-  submitFormDemo(popupForm, popupSubmit, popupMessage, () => {
-    localStorage.setItem(POPUP_KEY, '1');
-    closePopup();
+  document.addEventListener("visibilitychange", maybeOpenAutoOffer);
+  document.addEventListener("focusout", () => {
+    // Let the browser update the active element before checking focus.
+    if (autoOfferDue) setTimeout(maybeOpenAutoOffer, 0);
+  });
+  document.addEventListener("click", () => {
+    if (autoOfferDue) maybeOpenAutoOffer();
+  });
+  document.querySelectorAll("#booking-form, #area-form").forEach((form) => {
+    const stopAutoOffer = () => {
+      formStarted = true;
+      autoOfferDue = false;
+      clearTimeout(offerTimer);
+    };
+    form.addEventListener("input", stopAutoOffer);
+    form.addEventListener("change", stopAutoOffer);
+    form.addEventListener("submit", stopAutoOffer);
   });
 
-  // ---------- Footer year ----------
-  const yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
+  // Native dialog provides focus trapping, Escape dismissal and focus restoration.
+  document.querySelectorAll("[data-open-offer]").forEach((button) => {
+    button.addEventListener("click", openOffer);
+  });
+  document
+    .querySelector(".dialog-close")
+    .addEventListener("click", () => offerDialog.close());
+  offerDialog.addEventListener("close", () =>
+    document.body.classList.remove("dialog-open"),
+  );
+  offerDialog.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+    const focusable = [
+      ...offerDialog.querySelectorAll(
+        'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    ].filter(
+      (element) =>
+        !element.matches(":disabled") && element.getClientRects().length,
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  offerDialog.addEventListener("click", (event) => {
+    const rect = offerDialog.getBoundingClientRect();
+    if (
+      event.target === offerDialog &&
+      (event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom)
+    ) {
+      offerDialog.close();
+    }
+  });
 
+  function fieldError(field) {
+    const value = field.value.trim();
+    if (field.required && !value) {
+      return field.tagName === "SELECT"
+        ? "Please choose a cleaning service."
+        : "Please fill in this field.";
+    }
+    if (field.name === "zip" && !/^\d{5}$/.test(value))
+      return "Enter a valid 5-digit ZIP code.";
+    if (field.name === "name" && value.length < 2)
+      return "Please enter at least 2 characters.";
+    if (field.type === "email" && field.validity.typeMismatch)
+      return "Please enter a valid email address.";
+    return "";
+  }
+
+  function clearError(field) {
+    field.removeAttribute("aria-invalid");
+    const errorId = `${field.id}-error`;
+    document.getElementById(errorId)?.remove();
+    const remaining = (field.getAttribute("aria-describedby") || "")
+      .split(" ")
+      .filter((id) => id && id !== errorId);
+    if (remaining.length)
+      field.setAttribute("aria-describedby", remaining.join(" "));
+    else field.removeAttribute("aria-describedby");
+  }
+
+  function validateFields(fieldset) {
+    let firstInvalid;
+    fieldset.querySelectorAll("input, select, textarea").forEach((field) => {
+      clearError(field);
+      const message = fieldError(field);
+      if (!message) return;
+      field.setAttribute("aria-invalid", "true");
+      const error = document.createElement("p");
+      error.className = "field-error";
+      error.id = `${field.id}-error`;
+      error.textContent = message;
+      field.insertAdjacentElement("afterend", error);
+      field.setAttribute(
+        "aria-describedby",
+        `${field.getAttribute("aria-describedby") || ""} ${error.id}`.trim(),
+      );
+      firstInvalid ||= field;
+    });
+    firstInvalid?.focus();
+    return !firstInvalid;
+  }
+
+  document.querySelectorAll("[data-quote-form]").forEach((form) => {
+    const steps = [...form.querySelectorAll("[data-step]")];
+    const progress = [...form.querySelectorAll(".form-progress li")];
+    const message = form.querySelector(".form-message");
+    const ready = form.querySelector(".request-ready");
+    let currentStep = 1;
+    let draftBody = "";
+
+    function setStep(step, focus = true) {
+      currentStep = step;
+      ready.hidden = true;
+      message.textContent = "";
+      form.querySelector(".form-progress").hidden = false;
+      steps.forEach((fieldset, i) => {
+        fieldset.hidden = i !== step - 1;
+        fieldset.disabled = i !== step - 1;
+      });
+      progress.forEach((item, i) => {
+        item.classList.toggle("is-active", i === step - 1);
+        item.classList.toggle("is-complete", i < step - 1);
+        if (i === step - 1) item.setAttribute("aria-current", "step");
+        else item.removeAttribute("aria-current");
+      });
+      if (step === 2) {
+        form.querySelector("[data-summary]").textContent =
+          `${serviceNames[form.elements.service.value]} · ZIP ${form.elements.zip.value.trim()} · ${form.elements.frequency.value}`;
+      }
+      if (focus)
+        steps[step - 1]
+          .querySelector("input, select, textarea")
+          .focus({ preventScroll: true });
+    }
+
+    form.querySelector("[data-next]").addEventListener("click", () => {
+      if (validateFields(steps[0])) setStep(2);
+    });
+    form
+      .querySelector("[data-back]")
+      .addEventListener("click", () => setStep(1));
+    form
+      .querySelector("[data-edit]")
+      .addEventListener("click", () => setStep(2));
+
+    form.querySelectorAll("input, select, textarea").forEach((field) => {
+      field.addEventListener("input", () => clearError(field));
+      field.addEventListener("change", () => clearError(field));
+    });
+
+    form.addEventListener("keydown", (event) => {
+      if (
+        event.key === "Enter" &&
+        currentStep === 1 &&
+        event.target.tagName === "INPUT"
+      ) {
+        event.preventDefault();
+        if (validateFields(steps[0])) setStep(2);
+      }
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      // Enter in a step-one input should advance, never bypass validation.
+      if (currentStep === 1) {
+        if (validateFields(steps[0])) setStep(2);
+        return;
+      }
+      if (!validateFields(steps[0])) {
+        setStep(1, false);
+        validateFields(steps[0]);
+        return;
+      }
+      if (!validateFields(steps[1])) return;
+      const value = (name) => form.elements[name].value.trim();
+      draftBody = [
+        "Hello IM Excellence Cleaning,",
+        "",
+        "I would like a free cleaning quote.",
+        "",
+        `Service: ${serviceNames[value("service")]}`,
+        `ZIP code: ${value("zip")}`,
+        `Frequency: ${value("frequency")}`,
+        `Name: ${value("name")}`,
+        `Email: ${value("email")}`,
+        `Phone: ${value("phone") || "Not provided"}`,
+        `Notes: ${value("notes") || "None"}`,
+        "",
+        "I am interested in the 10% new-client offer, if eligible.",
+        "Please confirm service coverage, pricing and availability. Thank you!",
+      ].join("\n");
+      const subject = `Cleaning quote request — ${serviceNames[value("service")]}`;
+      form.querySelector("[data-email-link]").href =
+        `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftBody)}`;
+      steps.forEach((fieldset) => {
+        fieldset.hidden = true;
+        fieldset.disabled = true;
+      });
+      form.querySelector(".form-progress").hidden = true;
+      ready.hidden = false;
+      const heading = ready.querySelector("h3");
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    });
+
+    form.querySelector("[data-copy]").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(draftBody);
+        message.textContent =
+          "Request copied. Paste it into an email and send it to hello@imexcellencecleaning.com.";
+      } catch {
+        message.textContent =
+          "Clipboard access is unavailable. Use the email draft button, or email hello@imexcellencecleaning.com directly.";
+      }
+    });
+
+    setStep(1, false);
+    controllers.set(form, { setStep });
+  });
+
+  // Each service card links to a working booking anchor and preselects its service.
+  document.querySelectorAll("[data-service]").forEach((link) => {
+    link.addEventListener("click", () => {
+      controllers.get(bookingForm).setStep(1, false);
+      bookingForm.elements.service.value = link.dataset.service;
+      clearError(bookingForm.elements.service);
+    });
+  });
+
+  // Coverage is confirmed by the business, not inferred from placeholder ZIP lists.
+  const areaForm = document.getElementById("area-form");
+  const zipInput = document.getElementById("zipcode");
+  const zipResult = document.getElementById("zip-result");
+  const zipContinue = document.querySelector(".zip-continue");
+  areaForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!areaForm.reportValidity()) return;
+    const zip = zipInput.value.trim();
+    controllers.get(bookingForm).setStep(1, false);
+    bookingForm.elements.zip.value = zip;
+    clearError(bookingForm.elements.zip);
+    zipResult.textContent = `ZIP ${zip} added to your request. Our team will confirm coverage and availability with your quote.`;
+    zipContinue.hidden = false;
+  });
+  zipInput.addEventListener("input", () => {
+    zipResult.textContent = "";
+    zipContinue.hidden = true;
+  });
+
+  // Highlight the corresponding navigation section without affecting anchor behavior.
+  if ("IntersectionObserver" in window) {
+    const navLinks = [...navMenu.querySelectorAll('a[href^="#"]')];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          navLinks.forEach((link) => {
+            if (link.hash === `#${entry.target.id}`)
+              link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+          });
+        });
+      },
+      { rootMargin: "-15% 0px -60% 0px", threshold: 0 },
+    );
+    document
+      .querySelectorAll("main section[id]")
+      .forEach((section) => observer.observe(section));
+  }
+
+  document.getElementById("year").textContent = new Date().getFullYear();
 })();
