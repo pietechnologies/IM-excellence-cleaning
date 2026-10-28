@@ -318,6 +318,29 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .contact-item a { color: var(--dark); font-weight: 600; transition: color 0.2s; }
 .contact-item a:hover { color: var(--primary); }
 
+.contact-item.social .social-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.contact-item.social .social-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 8px 14px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+.contact-item.social .social-links a:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--primary-light);
+}
+
 .booking-form { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm); }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
 .form-group.full { grid-column: 1 / -1; }
@@ -349,6 +372,22 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .footer-links a:hover { color: var(--white); }
 .btn-footer { color: #94a3b8; font-size: 0.95rem; padding: 0; font-weight: 600; }
 .btn-footer:hover { color: var(--white); text-decoration: underline; }
+
+.social-group .footer-social {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.social-group .footer-social a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: var(--transition);
+}
+.social-group .footer-social a:hover { color: var(--accent); }
 .footer-bottom { margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.12); text-align: center; font-size: 0.875rem; color: #64748b; }
 
 /* ---------- Popup ---------- */
