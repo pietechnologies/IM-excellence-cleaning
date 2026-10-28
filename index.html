@@ -10,6 +10,7 @@
 </head>
 <body>
 
+  <!-- Skip to content -->
   <a class="skip-link" href="#content">Skip to content</a>
 
   <!-- Navbar -->
@@ -21,7 +22,9 @@
       </a>
 
       <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
-        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
       </button>
 
       <ul class="nav-menu" id="nav-menu">
@@ -31,7 +34,7 @@
         <li><a href="#area">Service Area</a></li>
         <li><a href="#testimonials">Testimonials</a></li>
         <li><a href="#contact">Contact</a></li>
-        <li><a href="#book" class="btn btn-primary">Book Now</a></li>
+        <li><a href="#contact" class="btn btn-primary">Book Now</a></li>
       </ul>
     </div>
   </nav>
@@ -50,18 +53,18 @@
         <div class="hero-stats">
           <div class="stat"><span class="stat-number">500+</span><span class="stat-label">Homes Cleaned</span></div>
           <div class="stat"><span class="stat-number">50+</span><span class="stat-label">Commercial Clients</span></div>
-          <div class="stat"><span class="stat-number">24/7</span><span class="stat-label">Support</span></div>
+          <div class="stat"><span class="stat-number">24/7</span><span class="stat-label">Support Available</span></div>
         </div>
       </div>
       <div class="hero-visual">
-        <div class="cleaning-illustration">
-          <div class="bubble large"></div>
-          <div class="bubble medium"></div>
-          <div class="bubble small"></div>
-          <div class="spray"></div>
-          <div class="cloth"></div>
-          <div class="sparkle"></div>
-          <div class="sparkle small"></div>
+        <div class="hero-card">
+          <div class="icon-wrapper">
+            <svg class="hero-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12a9 9 0 019 9h9a9 9 0 009-9V3a9 9 0 00-9-9H3a9 9 0 00-9 9v9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 12L12 15M12 12H15M9 12H6M12 12V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <img src="https://imexcellencecleaning.com/assets/logo-C-ImsENA.png" alt="IM Excellence Cleaning" class="hero-logo" />
         </div>
       </div>
     </div>
@@ -73,55 +76,76 @@
       <div class="section-header">
         <span class="section-kicker">Our Services</span>
         <h2 id="services-title">Professional Cleaning for Every Space</h2>
-        <p>Tailored cleaning solutions for homes and businesses.</p>
+        <p>Tailored cleaning solutions for homes and businesses of all sizes.</p>
       </div>
 
       <div class="services-grid">
         <article class="service-card">
-          <div class="service-icon">🏠</div>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <h3>Residential Cleaning</h3>
-          <p>Regular housekeeping, dusting, vacuuming, mopping, and kitchen/bathroom sanitizing.</p>
+          <p>Regular housekeeping, dusting, vacuuming, mopping, and kitchen/bathroom sanitizing for a consistently clean home.</p>
           <ul class="service-list">
-            <li>Weekly / Bi-weekly cleaning</li>
-            <li>Dusting &amp; surface care</li>
-            <li>Kitchen &amp; bathroom sanitizing</li>
-            <li>Floor vacuuming &amp; mopping</li>
+            <li><span>✓</span> Weekly / Bi-weekly cleaning</li>
+            <li><span>✓</span> Dusting &amp; surface care</li>
+            <li><span>✓</span> Kitchen &amp; bathroom sanitizing</li>
+            <li><span>✓</span> Floor vacuuming &amp; mopping</li>
           </ul>
         </article>
 
         <article class="service-card">
-          <div class="service-icon">🧼</div>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12a9 9 0 019 9h9a9 9 0 009-9V3a9 9 0 00-9-9H3a9 9 0 00-9 9v9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 12L12 15M12 12H15M9 12H6M12 12V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <h3>Deep Cleaning</h3>
-          <p>A thorough top-to-bottom clean reaching the areas regular cleaning misses.</p>
+          <p>A thorough top-to-bottom clean reaching the areas regular cleaning misses—perfect for spring cleaning or special occasions.</p>
           <ul class="service-list">
-            <li>Baseboards &amp; window sills</li>
-            <li>Inside oven &amp; fridge</li>
-            <li>Tile &amp; grout scrubbing</li>
-            <li>Ceiling fan &amp; light fixtures</li>
+            <li><span>✓</span> Baseboards &amp; window sills</li>
+            <li><span>✓</span> Inside oven &amp; fridge</li>
+            <li><span>✓</span> Tile &amp; grout scrubbing</li>
+            <li><span>✓</span> Ceiling fan &amp; light fixtures</li>
           </ul>
         </article>
 
         <article class="service-card">
-          <div class="service-icon">📦</div>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 3h18v18H3V3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M3 9h18M3 15h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M9 21V5a2 2 0 012-2h4a2 2 0 012 2v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <h3>Move-In / Move-Out</h3>
-          <p>Stress-free move-in or move-out cleaning for a spotless home.</p>
+          <p>Stress-free move-in or move-out cleaning so you can hand over or settle into a spotless home.</p>
           <ul class="service-list">
-            <li>Empty home deep clean</li>
-            <li>Cabinet interiors</li>
-            <li>Appliance cleaning</li>
-            <li>Window tracks &amp; sills</li>
+            <li><span>✓</span> Empty home deep clean</li>
+            <li><span>✓</span> Cabinet interiors</li>
+            <li><span>✓</span> Appliance cleaning</li>
+            <li><span>✓</span> Window tracks &amp; sills</li>
           </ul>
         </article>
 
         <article class="service-card">
-          <div class="service-icon">🏢</div>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M9 9h3m-3 3h3m-9 9V9h6v12H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <h3>Commercial Cleaning</h3>
-          <p>Professional office and commercial space cleaning.</p>
+          <p>Professional office and commercial space cleaning that keeps your workplace healthy, productive, and presentable.</p>
           <ul class="service-list">
-            <li>Office &amp; workspace cleaning</li>
-            <li>Restroom sanitizing</li>
-            <li>Trash removal</li>
-            <li>Flexible after-hours schedules</li>
+            <li><span>✓</span> Office &amp; workspace cleaning</li>
+            <li><span>✓</span> Restroom sanitizing</li>
+            <li><span>✓</span> Trash removal</li>
+            <li><span>✓</span> Flexible after-hours schedules</li>
           </ul>
         </article>
       </div>
@@ -134,10 +158,10 @@
       <div class="about-content">
         <span class="section-kicker">About Us</span>
         <h2 id="about-title">Why Choose IM Excellence Cleaning?</h2>
-        <p>We believe a clean environment is the foundation of a healthy, happy life. We combine attention to detail with eco-friendly products and a team you can trust.</p>
+        <p>We believe a clean environment is the foundation of a healthy, happy life. At IM Excellence Cleaning, we combine attention to detail with eco-friendly products and a team you can trust.</p>
         <ul class="feature-list">
           <li><span class="check">✓</span> Licensed, bonded, and insured professionals</li>
-          <li><span class="check">✓</span> Background-checked, trained staff</li>
+          <li><span class="check">✓</span> Background-checked, trained cleaning staff</li>
           <li><span class="check">✓</span> Eco-friendly, family-safe products</li>
           <li><span class="check">✓</span> Satisfaction guaranteed</li>
           <li><span class="check">✓</span> Transparent pricing, no hidden fees</li>
@@ -147,11 +171,22 @@
       </div>
       <div class="about-visual">
         <div class="about-card stat-card">
+          <div class="about-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <span class="stat-number">10+</span>
           <span class="stat-label">Years Experience</span>
         </div>
         <div class="about-card trust-card">
-          <span class="trust-icon">★</span>
+          <div class="about-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <polyline points="12 12 15 15 18 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <span class="trust-text">5-Star Rated<br/>by Local Customers</span>
         </div>
       </div>
@@ -225,7 +260,7 @@
     </div>
   </section>
 
-  <!-- Contact / Booking (short, step-wise) -->
+  <!-- Contact / Booking (step-wise) -->
   <section class="section" id="contact" aria-labelledby="contact-title">
     <div class="container contact-inner">
       <div class="contact-content">
@@ -248,8 +283,8 @@
           <div class="contact-item social">
             <span class="label">Follow Us</span>
             <div class="social-links">
-              <a href="https://www.instagram.com/im.excellence" target="_blank" rel="noopener noreferrer" aria-label="Instagram">📸 Instagram</a>
-              <a href="https://share.google/92PcvWnVu9Ty8go3j" target="_blank" rel="noopener noreferrer" aria-label="Google Business Profile">📍 Google Profile</a>
+              <a href="https://www.instagram.com/im.excellence" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+              <a href="https://share.google/92PcvWnVu9Ty8go3j" target="_blank" rel="noopener noreferrer" aria-label="Google Business Profile">Google Profile</a>
             </div>
           </div>
         </div>
@@ -259,7 +294,7 @@
         <!-- Step 1: Your Details -->
         <div class="form-step active" id="step-1">
           <div class="step-header">
-            <span class="step-number">1</span>
+            <span class="step-number">01</span>
             <span class="step-title">Your Details</span>
           </div>
           <div class="form-grid">
@@ -280,14 +315,14 @@
               <input type="text" id="zip" maxlength="5" placeholder="10001" inputmode="numeric" />
             </div>
           </div>
-          <button type="button" class="btn btn-primary btn-block next-step" data-next="2">Next</button>
+          <button type="button" class="btn btn-primary btn-block next-step" data-next="2">Next Step</button>
           <p id="form-message-1" class="form-message error"></p>
         </div>
 
-        <!-- Step 2: Service -->
+        <!-- Step 2: Service Details -->
         <div class="form-step" id="step-2">
           <div class="step-header">
-            <span class="step-number">2</span>
+            <span class="step-number">02</span>
             <span class="step-title">Service Details</span>
           </div>
           <div class="form-grid">
@@ -315,7 +350,11 @@
         <!-- Success -->
         <div class="form-step" id="step-success">
           <div class="step-success">
-            <div class="success-icon">✓</div>
+            <div class="success-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
             <h3>Request Sent!</h3>
             <p>Thank you. We've received your booking request and will contact you shortly to confirm your appointment.</p>
             <button type="button" class="btn btn-primary btn-block" onclick="resetBookingForm()">Book Another</button>
@@ -388,8 +427,8 @@
         <div class="link-group social-group">
           <h4>Follow Us</h4>
           <ul class="footer-social">
-            <li><a href="https://www.instagram.com/im.excellence" target="_blank" rel="noopener noreferrer" aria-label="Instagram">📸 Instagram</a></li>
-            <li><a href="https://share.google/92PcvWnVu9Ty8go3j" target="_blank" rel="noopener noreferrer" aria-label="Google Business Profile">📍 Google Profile</a></li>
+            <li><a href="https://www.instagram.com/im.excellence" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a></li>
+            <li><a href="https://share.google/92PcvWnVu9Ty8go3j" target="_blank" rel="noopener noreferrer" aria-label="Google Business Profile">Google Profile</a></li>
           </ul>
         </div>
       </div>
@@ -456,7 +495,11 @@
             <img src="https://imexcellencecleaning.com/assets/logo-C-ImsENA.png" alt="IM Excellence Cleaning" />
           </div>
           <div class="step-success">
-            <div class="success-icon">✓</div>
+            <div class="success-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
             <h3>Coupon Sent!</h3>
             <p>Check your email for your 10% off coupon. We'll be in touch shortly.</p>
             <button type="button" class="btn btn-primary btn-block" onclick="closePopup()">Close</button>

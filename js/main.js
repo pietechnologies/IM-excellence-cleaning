@@ -25,7 +25,7 @@
   const bookingSteps = document.querySelectorAll('#booking-form .form-step');
   const bookingNextBtns = document.querySelectorAll('#booking-form .next-step');
   const bookingPrevBtns = document.querySelectorAll('#booking-form .prev-step');
-  const bookingSubmitBtn = document.getElementById('form-submit');
+  const bookingSubmitBtn = bookingForm ? bookingForm.querySelector('.submit-step') : null;
   let currentBookingStep = 1;
 
   // Popup
@@ -179,11 +179,15 @@
     bookingForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const msgEl = document.getElementById('form-message-2');
-      bookingSubmitBtn.disabled = true;
-      bookingSubmitBtn.textContent = 'Sending…';
+      if (bookingSubmitBtn) {
+        bookingSubmitBtn.disabled = true;
+        bookingSubmitBtn.textContent = 'Sending…';
+      }
       setTimeout(() => {
-        bookingSubmitBtn.disabled = false;
-        bookingSubmitBtn.textContent = 'Request Booking';
+        if (bookingSubmitBtn) {
+          bookingSubmitBtn.disabled = false;
+          bookingSubmitBtn.textContent = 'Request Booking';
+        }
         showBookingStep(3); // success step
       }, 1000);
     });
