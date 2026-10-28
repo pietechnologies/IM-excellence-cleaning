@@ -3,8 +3,8 @@
    - Mobile nav
    - Sticky navbar
    - Zip code service-area checker
-   - Auto popup form after 10–15 seconds (once per session)
-   - Contact / popup form handling (no backend; demo-ready)
+   - Step-wise booking form (contact)
+   - Compact step-wise auto popup (10-15s, once per session)
    ============================================================ */
 
 (function () {
@@ -20,18 +20,25 @@
   const checkZipBtn = document.getElementById('check-zip');
   const zipResult = document.getElementById('zip-result');
 
+  // Booking form (step-wise)
   const bookingForm = document.getElementById('booking-form');
-  const formMessage = document.getElementById('form-message');
-  const formSubmit = document.getElementById('form-submit');
+  const bookingSteps = document.querySelectorAll('#booking-form .form-step');
+  const bookingNextBtns = document.querySelectorAll('#booking-form .next-step');
+  const bookingPrevBtns = document.querySelectorAll('#booking-form .prev-step');
+  const bookingSubmitBtn = document.getElementById('form-submit');
+  let currentBookingStep = 1;
 
+  // Popup
   const popup = document.getElementById('popup');
   const popupClose = document.querySelector('.popup-close');
+  const popupNext = document.querySelector('.popup-next');
+  const popupPrev = document.querySelector('.popup-prev');
   const popupForm = document.getElementById('popup-form');
   const popupMessage = document.getElementById('popup-message');
   const popupSubmit = document.getElementById('popup-submit');
+  let currentPopupStep = 1;
 
   // ---------- Service area data ----------
-  // UPDATE THIS LIST with the real zip codes IM Excellence Cleaning serves.
   const SERVED_ZIPS = new Set([
     '10001','10002','10003','10004','10005','10006','10007','10009','10010',
     '10011','10012','10013','10014','10016','10017','10018','10019','10020',
@@ -45,7 +52,7 @@
     '90040','90041','90042','90043','90044','90045','90046','90047','90048',
     '90049','90057','90061','90062','90063','90064','90066','90067','90068',
     '90069','90071','90077','90094','90210','90211','90212','90230','90232',
-    '90245','90250','90265','90272','90277','90278','90280','90291','90292',
+    '90245','90250','90065','90272','90277','90278','90280','90291','90292',
     '60007','60018','60056','60077','60601','60602','60603','60604','60605',
     '60606','60607','60608','60609','60610','60611','60612','60613','60614',
     '60615','60616','60617','60618','60619','60620','60621','60622','60623',
@@ -61,11 +68,6 @@
     '33184','33185','33186','33187','33189','33190','33193','33194','33196'
   ]);
 
-  const ZIP_ERRORS = {
-    required: 'Please enter your zip code.',
-    invalid: 'Please enter a valid 5-digit zip code.',
-  };
-
   // ---------- Helpers ----------
   function setResult(el, text, type) {
     el.textContent = text;
@@ -78,14 +80,8 @@
 
   function checkZip(zip) {
     zip = String(zip).trim();
-    if (!zip) {
-      setResult(zipResult, ZIP_ERRORS.required, 'error');
-      return;
-    }
-    if (!isValidZip(zip)) {
-      setResult(zipResult, ZIP_ERRORS.invalid, 'error');
-      return;
-    }
+    if (!zip) { setResult(zipResult, 'Please enter your zip code.', 'error'); return; }
+    if (!isValidZip(zip)) { setResult(zipResult, 'Please enter a valid 5-digit zip code.', 'error'); return; }
     if (SERVED_ZIPS.has(zip)) {
       setResult(zipResult, 'Great news! We service zip code ' + zip + '. Book your cleaning today.', 'success');
     } else {
@@ -93,14 +89,12 @@
     }
   }
 
-  // ---------- Zip checker interactions ----------
+  // ---------- Zip checker ----------
   if (checkZipBtn && zipInput && zipResult) {
     checkZipBtn.addEventListener('click', () => checkZip(zipInput.value));
-
     zipInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); checkZip(zipInput.value); }
     });
-
     zipInput.addEventListener('input', () => {
       zipResult.textContent = '';
       zipResult.className = 'result';
@@ -113,7 +107,6 @@
       const isOpen = navMenu.classList.toggle('open');
       navToggle.setAttribute('aria-expanded', isOpen);
     });
-
     navLinks.forEach((link) => {
       link.addEventListener('click', () => {
         navMenu.classList.remove('open');
@@ -121,8 +114,6 @@
       });
     });
   }
-
-  // Close mobile menu on escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (navMenu) navMenu.classList.remove('open');
@@ -131,110 +122,145 @@
     }
   });
 
-  // ---------- Sticky navbar shadow on scroll ----------
+  // ---------- Sticky navbar ----------
   if (navbar) {
     const updateNavbar = () => {
-      if (window.scrollY > 20) {
-        navbar.style.boxShadow = 'var(--shadow-sm)';
-      } else {
-        navbar.style.boxShadow = '';
-      }
+      navbar.style.boxShadow = window.scrollY > 20 ? 'var(--shadow-sm)' : '';
     };
     window.addEventListener('scroll', updateNavbar, { passive: true });
     updateNavbar();
   }
 
-  // ---------- Popup form ----------
-  const POPUP_KEY = 'imex_popup_shown';
-  const POPUP_DELAY_MIN = 10000; // 10 seconds
-  const POPUP_DELAY_MAX = 15000; // 15 seconds
-
-  function openPopup() {
-    if (popup) popup.classList.add('open');
-    popup.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closePopup() {
-    if (popup) popup.classList.remove('open');
-    popup.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-
-  function schedulePopup() {
-    const delay = Math.floor(Math.random() * (POPUP_DELAY_MAX - POPUP_DELAY_MIN + 1)) + POPUP_DELAY_MIN;
-    setTimeout(() => {
-      const alreadyShown = localStorage.getItem(POPUP_KEY) === '1';
-      if (!alreadyShown) openPopup();
-    }, delay);
-  }
-
-  // Close on outside click
-  if (popup) {
-    popup.addEventListener('click', (e) => {
-      if (e.target === popup) closePopup();
+  // ---------- Step-wise booking form ----------
+  function showBookingStep(step) {
+    bookingSteps.forEach((s, i) => {
+      s.classList.toggle('active', (i + 1) === step);
     });
+    currentBookingStep = step;
   }
 
-  if (popupClose) {
-    popupClose.addEventListener('click', closePopup);
-  }
+  bookingNextBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = parseInt(btn.getAttribute('data-next'), 10);
+      const currentEl = document.getElementById('step-' + currentBookingStep);
+      const msgEl = document.getElementById('form-message-' + currentBookingStep);
 
-  // Schedule the auto popup once DOM is ready
-  if (popup) schedulePopup();
-
-  // ---------- Form submission helpers ----------
-  function submitFormDemo(form, submitBtn, messageEl, onSuccess) {
-    if (!form) return;
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!submitBtn || !messageEl) return;
-
-      // Simple client-side validation
-      const required = form.querySelectorAll('[required]');
+      // Validate required fields in current step
+      const required = currentEl.querySelectorAll('[required]');
       let missing = null;
       required.forEach((field) => {
         if (!field.value.trim()) missing = field;
       });
       if (missing) {
         missing.focus();
-        setResultMsg(messageEl, 'Please fill out all required fields.', 'error');
+        msgEl.textContent = 'Please fill out all required fields.';
         return;
       }
-
-      // Email validation when present
-      const emailField = form.querySelector('input[type="email"]');
-      if (emailField && emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
-        emailField.focus();
-        setResultMsg(messageEl, 'Please enter a valid email address.', 'error');
+      // Email check
+      const email = currentEl.querySelector('input[type="email"]');
+      if (email && email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        email.focus();
+        msgEl.textContent = 'Please enter a valid email address.';
         return;
       }
+      msgEl.textContent = '';
+      showBookingStep(next);
+    });
+  });
 
-      // Simulate network request
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending…';
+  bookingPrevBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const prev = parseInt(btn.getAttribute('data-prev'), 10);
+      showBookingStep(prev);
+    });
+  });
 
+  if (bookingForm) {
+    bookingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('form-message-2');
+      bookingSubmitBtn.disabled = true;
+      bookingSubmitBtn.textContent = 'Sending…';
       setTimeout(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-        setResultMsg(messageEl, 'Thanks! Your request has been sent. We’ll contact you shortly.', 'success');
-        form.reset();
-        if (onSuccess) onSuccess();
-      }, 1200);
+        bookingSubmitBtn.disabled = false;
+        bookingSubmitBtn.textContent = 'Request Booking';
+        showBookingStep(3); // success step
+      }, 1000);
     });
   }
 
-  function setResultMsg(el, text, type) {
-    el.textContent = text;
-    el.className = 'form-message ' + (type || '');
+  window.resetBookingForm = function () {
+    bookingForm.reset();
+    showBookingStep(1);
+  };
+
+  // ---------- Popup ----------
+  const POPUP_KEY = 'imex_popup_shown';
+  const POPUP_DELAY_MIN = 10000;
+  const POPUP_DELAY_MAX = 15000;
+
+  function openPopup() {
+    if (popup) popup.classList.add('open');
+    popup.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    showPopupStep(1);
   }
 
-  submitFormDemo(bookingForm, formSubmit, formMessage);
-  submitFormDemo(popupForm, popupSubmit, popupMessage, () => {
-    localStorage.setItem(POPUP_KEY, '1');
-    closePopup();
-  });
+  function closePopup() {
+    if (popup) popup.classList.remove('open');
+    popup.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    showPopupStep(1);
+    currentPopupStep = 1;
+  }
+
+  function showPopupStep(step) {
+    const steps = document.querySelectorAll('#popup .popup-step');
+    steps.forEach((s, i) => {
+      s.classList.toggle('active', (i + 1) === step);
+    });
+    currentPopupStep = step;
+  }
+
+  function schedulePopup() {
+    const delay = Math.floor(Math.random() * (POPUP_DELAY_MAX - POPUP_DELAY_MIN + 1)) + POPUP_DELAY_MIN;
+    setTimeout(() => {
+      if (localStorage.getItem(POPUP_KEY) !== '1') openPopup();
+    }, delay);
+  }
+
+  if (popup) {
+    popup.addEventListener('click', (e) => { if (e.target === popup) closePopup(); });
+  }
+  if (popupClose) popupClose.addEventListener('click', closePopup);
+  if (popupNext) popupNext.addEventListener('click', () => showPopupStep(2));
+  if (popupPrev) popupPrev.addEventListener('click', () => showPopupStep(1));
+
+  if (popup) schedulePopup();
+
+  // Popup form submit
+  if (popupForm) {
+    popupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const required = popupForm.querySelectorAll('[required]');
+      let missing = null;
+      required.forEach((field) => { if (!field.value.trim()) missing = field; });
+      if (missing) { missing.focus(); popupMessage.textContent = 'Please fill out all required fields.'; return; }
+      const email = popupForm.querySelector('input[type="email"]');
+      if (email && email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        email.focus(); popupMessage.textContent = 'Please enter a valid email address.'; return;
+      }
+      popupSubmit.disabled = true;
+      popupSubmit.textContent = 'Sending…';
+      popupMessage.textContent = '';
+      setTimeout(() => {
+        popupSubmit.disabled = false;
+        popupSubmit.textContent = 'Send My Coupon';
+        localStorage.setItem(POPUP_KEY, '1');
+        showPopupStep(3); // success
+      }, 1000);
+    });
+  }
 
   // ---------- Footer year ----------
   const yearEl = document.getElementById('year');
