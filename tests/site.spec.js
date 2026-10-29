@@ -2,12 +2,13 @@ const { test, expect } = require("@playwright/test");
 
 async function completeSpace(page, prefix = "booking") {
   await page.locator(`#${prefix}-service`).selectOption("deep");
-  await page.locator(`#${prefix}-zip`).fill("10001");
+  await page.locator(`#${prefix}-zip`).fill("33602");
   await page.locator(`#${prefix}-form [data-next]`).click();
 }
 async function completeDetails(page, prefix = "booking") {
   await page.locator(`#${prefix}-name`).fill("Alex Smith");
   await page.locator(`#${prefix}-email`).fill("alex@example.com");
+  await page.locator(`#${prefix}-phone`).fill("(813) 316-8298");
   await page.locator(`#${prefix}-form button[type="submit"]`).click();
 }
 
@@ -35,6 +36,20 @@ test("all anchor targets, local assets, and SVG symbols resolve", async ({
     return ids.filter((id, i) => ids.indexOf(id) !== i);
   });
   expect(duplicateIDs).toEqual([]);
+  // Below-the-fold gallery images intentionally use lazy loading. Request them
+  // before asserting that every local asset resolves, independent of layout.
+  await page.locator("img").evaluateAll((elements) =>
+    Promise.all(
+      elements.map((img) => {
+        img.loading = "eager";
+        if (img.complete) return;
+        return new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        });
+      }),
+    ),
+  );
   const images = await page.locator("img").evaluateAll((elements) =>
     elements.map((img) => ({
       src: img.getAttribute("src"),
@@ -61,16 +76,16 @@ test("main quote validates both steps and preserves values when going back", asy
     "aria-invalid",
     "true",
   );
-  await page.locator("#booking-zip").fill("10001");
+  await page.locator("#booking-zip").fill("33602");
   await form.locator("[data-next]").click();
   await expect(form.locator('[data-step="2"]')).toBeVisible();
   await expect(form.locator("[data-summary]")).toContainText(
-    "Deep cleaning · ZIP 10001",
+    "Deep cleaning · ZIP 33602",
   );
   await page.locator("#booking-name").fill("Alex Smith");
   await form.locator("[data-back]").click();
   await expect(page.locator("#booking-service")).toHaveValue("deep");
-  await expect(page.locator("#booking-zip")).toHaveValue("10001");
+  await expect(page.locator("#booking-zip")).toHaveValue("33602");
   await form.locator("[data-next]").click();
   await expect(page.locator("#booking-name")).toHaveValue("Alex Smith");
   await page.locator("#booking-email").fill("bad-email");
@@ -80,15 +95,13 @@ test("main quote validates both steps and preserves values when going back", asy
     "true",
   );
   await page.locator("#booking-email").fill("alex@example.com");
+  await page.locator("#booking-phone").fill("(813) 316-8298");
   await form.locator('button[type="submit"]').click();
   await expect(form.locator(".request-ready")).toBeVisible();
   await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
-  await expect(form.locator("[data-delivery-note]")).toContainText(
-    "has not been sent",
-  );
+  await expect(form.locator("[data-delivery-note]")).toHaveCount(0);
   await expect(form.locator('a[href^="mailto:"]')).toHaveCount(0);
-  await form.locator("[data-edit]").click();
-  await expect(page.locator("#booking-email")).toHaveValue("alex@example.com");
+  await expect(form.locator("[data-edit]")).toHaveCount(0);
 });
 
 test("Enter in step one advances rather than submitting prematurely", async ({
@@ -96,26 +109,24 @@ test("Enter in step one advances rather than submitting prematurely", async ({
 }) => {
   await page.goto("/#book");
   await page.locator("#booking-service").selectOption("residential");
-  await page.locator("#booking-zip").fill("90210");
+  await page.locator("#booking-zip").fill("34683");
   await page.locator("#booking-zip").press("Enter");
   await expect(page.locator('#booking-form [data-step="2"]')).toBeVisible();
   await expect(page.locator("#booking-form .request-ready")).toBeHidden();
 });
 
-test("service cards preselect the service; ZIP check prepopulates booking without inventing coverage", async ({
+test("service cards preselect the service; ZIP check prepopulates booking using the supplied service area", async ({
   page,
 }) => {
   await page.goto("/");
   await page.locator('.service-card [data-service="commercial"]').click();
   await expect(page.locator("#booking-service")).toHaveValue("commercial");
-  await page.locator("#zipcode").fill("90210");
+  await page.locator("#zipcode").fill("34683");
   await page.locator("#area-form button").click();
-  await expect(page.locator("#zip-result")).toContainText(
-    "Our team will confirm coverage",
-  );
-  await expect(page.locator("#booking-zip")).toHaveValue("90210");
+  await expect(page.locator("#zip-result")).toContainText("Yes! We serve");
+  await expect(page.locator("#booking-zip")).toHaveValue("34683");
   await expect(page.locator(".zip-continue")).toBeVisible();
-  await page.locator("#zipcode").fill("10001");
+  await page.locator("#zipcode").fill("33602");
   await expect(page.locator(".zip-continue")).toBeHidden();
 });
 
@@ -274,7 +285,7 @@ test("automatic offer does not interrupt an in-progress quote", async ({
   await page.goto("/");
 
   await page.locator("#booking-service").selectOption("deep");
-  await page.locator("#booking-zip").fill("10001");
+  await page.locator("#booking-zip").fill("33602");
   await page.clock.fastForward(20000);
   await expect(page.locator("#offer-dialog")).not.toBeVisible();
   await expect(page.locator("#booking-service")).toHaveValue("deep");
@@ -353,11 +364,11 @@ for (const width of [390, 1440]) {
     await expect(page.locator("body")).toHaveCSS("color", "rgb(23, 47, 62)");
     await expect(page.locator(".hero-image")).toHaveCSS("object-fit", "cover");
     expect(
-      await page.evaluate(() => document.fonts.check("400 14px Manrope")),
+      await page.evaluate(() => document.fonts.check("400 14px Inter")),
     ).toBe(true);
     const assets = await page.evaluate(() => ({
       stylesheet: document.querySelector('link[rel="stylesheet"]').href,
-      script: document.querySelector("script[src]").src,
+      script: document.querySelector('script[src*="js/main.js"]').src,
       image: document.querySelector(".hero-image").src,
     }));
     expect(assets.stylesheet).toMatch(
@@ -552,12 +563,13 @@ for (const prefix of ["booking", "offer"]) {
     await expect(form.locator("[data-thank-you-message]")).toContainText(
       "Your request has been received",
     );
-    await expect(form.locator("[data-delivery-note]")).toBeHidden();
+    await expect(form.locator("[data-delivery-note]")).toHaveCount(0);
     expect(received).toMatchObject({
       service: "deep",
-      zip: "10001",
+      zip: "33602",
       name: "Alex Smith",
       email: "alex@example.com",
+      phone: "(813) 316-8298",
       notes: "Kitchen needs attention",
       source: `${prefix}-form`,
     });
@@ -607,3 +619,245 @@ test("old session flags do not suppress the popup on a new load", async ({
   await page.clock.fastForward(7000);
   await expect(page.locator("#offer-dialog")).toBeVisible();
 });
+
+const coverage = require("../js/service-areas");
+
+test("shared service data contains exactly the 70 supplied ZIP codes and preserves shared areas", () => {
+  const expected = [
+    "33602",
+    "33603",
+    "33604",
+    "33605",
+    "33606",
+    "33607",
+    "33609",
+    "33610",
+    "33611",
+    "33612",
+    "33613",
+    "33614",
+    "33615",
+    "33616",
+    "33617",
+    "33618",
+    "33619",
+    "33624",
+    "33625",
+    "33626",
+    "33629",
+    "33634",
+    "33635",
+    "33637",
+    "33647",
+    "33701",
+    "33702",
+    "33703",
+    "33704",
+    "33705",
+    "33706",
+    "33707",
+    "33708",
+    "33709",
+    "33710",
+    "33711",
+    "33712",
+    "33713",
+    "33714",
+    "33715",
+    "33716",
+    "33755",
+    "33756",
+    "33759",
+    "33760",
+    "33761",
+    "33762",
+    "33763",
+    "33764",
+    "33765",
+    "33767",
+    "33508",
+    "33509",
+    "33510",
+    "33511",
+    "33543",
+    "33544",
+    "33545",
+    "33568",
+    "33569",
+    "33578",
+    "33579",
+    "33548",
+    "33549",
+    "33558",
+    "33559",
+    "33687",
+    "34683",
+    "34684",
+    "34685",
+  ];
+  expect([...coverage.zips].sort()).toEqual(expected.sort());
+  expect(coverage.checkZip("33647").areas).toEqual(["Tampa", "New Tampa"]);
+  expect(coverage.checkZip("33617").areas).toEqual(["Tampa", "Temple Terrace"]);
+  for (const value of [
+    "33601",
+    "33620",
+    "33757",
+    "34686",
+    "10001",
+    "90210",
+    "33602-1234",
+    "3360",
+    "abcde",
+    "",
+    null,
+    33602,
+  ]) {
+    expect(coverage.checkZip(value).served).toBe(false);
+  }
+});
+
+test("ZIP checker accepts all listed ZIPs but does not infer nearby coverage", async ({
+  page,
+}) => {
+  await page.goto("/");
+  for (const zip of coverage.zips) {
+    await page.locator("#zipcode").fill(zip);
+    await page.locator("#area-form").evaluate((form) => form.requestSubmit());
+    await expect(page.locator("#zip-result")).toContainText(`We serve ${zip}`);
+    await expect(page.locator("#booking-zip")).toHaveValue(zip);
+  }
+  for (const zip of ["33601", "33620", "33757", "10001"]) {
+    await page.locator("#zipcode").fill(zip);
+    await page.locator("#area-form").evaluate((form) => form.requestSubmit());
+    await expect(page.locator("#zip-result")).toContainText("not serving");
+    await expect(page.locator(".zip-continue")).toBeHidden();
+    await expect(
+      page.locator('#zip-result a[href="tel:+18133168298"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('#zip-result a[href="sms:+18133168298"]'),
+    ).toBeVisible();
+  }
+});
+
+for (const prefix of ["booking", "offer"]) {
+  test(`${prefix} rejects unsupported ZIPs at step one and rechecks coverage before sending`, async ({
+    page,
+  }) => {
+    await configureSubmission(page);
+    let posts = 0;
+    await page.route("**/api/enquiries", async (route) => {
+      posts++;
+      await route.fulfill({ status: 201, body: "{}" });
+    });
+    await page.goto("/");
+    if (prefix === "offer") await page.locator("[data-open-offer]").click();
+    const form = page.locator(`#${prefix}-form`);
+    await page.locator(`#${prefix}-service`).selectOption("deep");
+    await page.locator(`#${prefix}-zip`).fill("10001");
+    await form.locator("[data-next]").click();
+    await expect(form.locator('[data-step="1"]')).toBeVisible();
+    await expect(form.locator(".field-error")).toContainText("not serving");
+    await expect(
+      form.locator('.field-error a[href="tel:+18133168298"]'),
+    ).toBeVisible();
+    await page.locator(`#${prefix}-zip`).fill("33647");
+    await form.locator("[data-next]").click();
+    await page.locator(`#${prefix}-name`).fill("Alex Smith");
+    await page.locator(`#${prefix}-email`).fill("alex@example.com");
+    await page.locator(`#${prefix}-phone`).fill("(813) 316-8298");
+    // A hidden/disabled first-step input must not bypass the final validation.
+    await page.locator(`#${prefix}-zip`).evaluate((field) => {
+      field.value = "33601";
+    });
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator('[data-step="1"]')).toBeVisible();
+    expect(posts).toBe(0);
+    await page.locator(`#${prefix}-zip`).fill("34685");
+    await form.locator("[data-next]").click();
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator("[data-thank-you-message]")).toContainText(
+      "received",
+    );
+    expect(posts).toBe(1);
+  });
+}
+
+for (const width of [375, 768, 1440]) {
+  test(`readable typography and verified contact buttons at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const sizes = await page.evaluate(() => {
+      const font = (selector) =>
+        parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
+      return {
+        body: font("body"),
+        footer: font(".footer-column > a"),
+        copyright: font(".footer-bottom p"),
+        label: font("#booking-form label"),
+        card: font(".service-card > p"),
+      };
+    });
+    expect(sizes.body).toBeGreaterThanOrEqual(16);
+    expect(sizes.footer).toBeGreaterThanOrEqual(14);
+    expect(sizes.copyright).toBeGreaterThanOrEqual(13);
+    expect(sizes.label).toBeGreaterThanOrEqual(14);
+    expect(sizes.card).toBeGreaterThanOrEqual(15);
+    await expect(
+      page.locator('.hero-contact-actions a[href="tel:+18133168298"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('.hero-contact-actions a[href="sms:+18133168298"]'),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+}
+
+for (const prefix of ["booking", "offer"]) {
+  test(`${prefix} requires a visible valid phone number and has a clean thank-you screen`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    if (prefix === "offer") await page.locator("[data-open-offer]").click();
+    await completeSpace(page, prefix);
+    const form = page.locator(`#${prefix}-form`);
+    const phone = page.locator(`#${prefix}-phone`);
+    await expect(phone).toBeVisible();
+    await expect(phone).toHaveAttribute("required", "");
+    if (prefix === "offer")
+      await expect(page.locator(".offer-additional")).not.toHaveAttribute(
+        "open",
+        "",
+      );
+    await page.locator(`#${prefix}-name`).fill("Alex Smith");
+    await page.locator(`#${prefix}-email`).fill("alex@example.com");
+    await form.locator('button[type="submit"]').click();
+    await expect(phone).toBeFocused();
+    await expect(phone).toHaveAttribute("aria-invalid", "true");
+    await expect(form.locator(".request-ready")).toBeHidden();
+    for (const invalid of ["123", "abcdefghi", "-------", "1234567890123456"]) {
+      await phone.fill(invalid);
+      await form.locator('button[type="submit"]').click();
+      await expect(page.locator(`#${prefix}-phone-error`)).toContainText(
+        "valid phone number",
+      );
+      await expect(form.locator(".request-ready")).toBeHidden();
+    }
+    await phone.fill("+1 (813) 316-8298");
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
+    await expect(form.locator(".request-ready")).not.toContainText(
+      /not connected|has not been sent|back to my details|has been received/i,
+    );
+    await expect(form.locator("[data-edit], [data-delivery-note]")).toHaveCount(
+      0,
+    );
+    await expect(form.locator(".request-ready button")).toHaveCount(0);
+  });
+}
