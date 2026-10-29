@@ -7,7 +7,7 @@ const htmlPath = path.join(root, "index.html");
 const original = readFileSync(htmlPath, "utf8");
 let updated = original;
 
-for (const asset of ["css/style.css", "js/main.js"]) {
+for (const asset of ["css/style.css", "js/service-areas.js", "js/main.js"]) {
   const version = createHash("sha256")
     .update(readFileSync(path.join(root, asset)))
     .digest("hex")

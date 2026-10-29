@@ -13,7 +13,7 @@ Open http://localhost:3000. The preview server accepts proxy hosts and does not 
 
 ## Design and interactions
 
-- Navy, ivory, and fresh lime visual system with locally hosted Manrope fonts.
+- Navy, ivory, and fresh lime visual system with locally hosted Inter fonts.
 - Responsive hero, services, about, process, testimonials, neighborhood/coverage, booking, FAQ, and footer sections.
 - Consistent inline SVG line icons and locally hosted full-color Instagram and Google brand icons.
 - Working booking anchors; service-card links preselect the matching service.
@@ -53,13 +53,27 @@ success. Tests mock the endpoint; they do not verify a production receiving serv
 
 ## Coverage and business details
 
-The old ZIP-code list was explicitly placeholder data spanning several unrelated cities. It has been removed so the site does not falsely promise coverage. The ZIP tool validates the format, copies the ZIP into the quote form, and explains that the team will confirm coverage.
+`js/service-areas.js` is the single owner-supplied service-area registry: **70
+unique ZIP codes across 10 named areas**. It preserves shared Tampa/New Tampa and
+Tampa/Temple Terrace entries and does not infer coverage from neighboring ZIPs.
+The registry powers the visible coverage list, ZIP checker, both form steps, and
+final pre-submission validation. Unsupported ZIPs are blocked and show direct
+Call/Text links; malformed ZIPs get a format error. Only exact five-digit ZIP
+strings are accepted (surrounding whitespace is trimmed, ZIP+4 is not accepted).
+
+**Server-side enforcement:** this is still a static Pages site without a receiving
+backend. Client checks can always be bypassed by a direct API request. The registry
+also exports a Node-compatible API, so the configured receiving service must use
+`require('./js/service-areas').checkZip(payload.zip).served` (or the same exact
+allowlist in its own stack) and return HTTP 422 for an unserved ZIP _before_
+storing, emailing, or confirming a lead. Do not rely solely on browser validation.
+No production backend validation is claimed by this change.
 
 The old Google share URL was not a valid embeddable Maps URL. It is now a normal external profile link beside a clearly labeled illustrative neighborhood map. A real embed can be added later using the correct Google Maps embed URL and verified address.
 
-The placeholder `555` telephone number and broken externally hosted logo were removed. The local wordmark does not depend on that remote asset. Replace it with the approved company logo and add the verified telephone number when available.
+Call and Text buttons use **(813) 316-8298**, as listed on the owner-supplied [main website](https://imexcellencecleaning.com/). The email address and business hours were also aligned with that site: `imexcellencecleaning@gmail.com`; Mon–Fri 7 AM–7 PM, Sat 8 AM–5 PM, Sun closed. The local wordmark does not depend on the old externally hosted logo.
 
-Existing testimonials and service/trust statements have been retained from the original site, not independently verified or presented as Google-sourced reviews. Confirm them, business hours, eco-friendly practices, licensing/insurance, and the new-client offer before publishing.
+Existing testimonials and service/trust statements have been retained from the original site, not independently verified or presented as Google-sourced reviews. Confirm testimonial permission, eco-friendly practices, licensing/insurance, and the new-client offer before publishing.
 
 ## Customize
 
@@ -94,7 +108,7 @@ The suite covers links and assets, both form steps, validation, Enter-key behavi
 ## Assets
 
 - `clean-living-room.jpg` and `gallery-*.jpg`: AI-generated editorial-style interiors; illustrative, not photos of client work. The gallery includes an explicit disclosure.
-- Manrope font: SIL Open Font License, included in `assets/fonts/LICENSE`.
+- Inter font: SIL Open Font License, included in `assets/fonts/INTER-LICENSE`. Legacy Manrope files are retained but no longer loaded.
 - Google and Instagram SVGs: original brand artwork from [SVGL](https://github.com/pheralb/svgl), with repository license in `assets/BRAND-ICONS-LICENSE.txt`. Brand trademarks belong to their respective owners; use does not imply affiliation.
 - Service/interface icons: inline SVG line artwork, with no external icon-font dependency.
 
@@ -144,3 +158,16 @@ shows an older document, use a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).
   without scrolling. Scrolling is retained when genuinely needed on short
   screens, with a keyboard open, with expanded extras, or with validation errors;
   content is never clipped just to hide the scrollbar.
+
+## Readability and local contact
+
+Inter is hosted locally in weights 400, 600, 700 and 800. Body text is 16px;
+service descriptions are at least 15px; footer links are 14px and copyright is
+13px. Secondary text has been increased across breakpoints rather than remaining
+at the old 8–11px sizes. Navigation switches to a menu on narrower desktop/tablet
+screens; footer/contact columns reflow instead of squeezing the text.
+
+Call/Text actions appear by the hero, booking form, service area, footer, and
+unsupported-ZIP errors. Coverage does not guarantee an available appointment;
+pricing and dates are still confirmed by the team. Form delivery configuration
+and the 5–7 second per-load popup behavior are unchanged.

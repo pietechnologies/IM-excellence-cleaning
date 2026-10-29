@@ -19,6 +19,35 @@
       .querySelector('meta[name="cleaning-form-endpoint"]')
       ?.content.trim() || "";
   const controllers = new Map();
+  const serviceAreas = window.IMServiceAreas;
+  const outsideAreaMessage =
+    "Sorry, we’re not serving this ZIP code. Please call or text us to discuss your location.";
+
+  function addContactLinks(container) {
+    const links = document.createElement("span");
+    links.className = "zip-contact-links";
+    for (const [label, href] of [
+      ["Call us", "tel:+18133168298"],
+      ["Text us", "sms:+18133168298"],
+    ]) {
+      const link = document.createElement("a");
+      link.textContent = label;
+      link.href = href;
+      links.append(link);
+    }
+    container.append(links);
+  }
+
+  const coverageList = document.getElementById("coverage-list");
+  Object.entries(serviceAreas.areas).forEach(([city, zips]) => {
+    const item = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = city;
+    const list = document.createElement("p");
+    list.textContent = zips.join(", ");
+    item.append(title, list);
+    coverageList.append(item);
+  });
 
   function closeMenu(returnFocus = false) {
     navMenu.classList.remove("open");
@@ -210,8 +239,11 @@
         ? "Please choose a cleaning service."
         : "Please fill in this field.";
     }
-    if (field.name === "zip" && !/^\d{5}$/.test(value))
-      return "Enter a valid 5-digit ZIP code.";
+    if (field.name === "zip") {
+      const coverage = serviceAreas.checkZip(value);
+      if (!coverage.valid) return "Enter a valid 5-digit ZIP code.";
+      if (!coverage.served) return outsideAreaMessage;
+    }
     if (field.name === "name" && value.length < 2)
       return "Please enter at least 2 characters.";
     if (field.type === "email" && field.validity.typeMismatch)
@@ -231,23 +263,28 @@
     else field.removeAttribute("aria-describedby");
   }
 
+  function showFieldError(field) {
+    clearError(field);
+    const message = fieldError(field);
+    if (!message) return false;
+    field.setAttribute("aria-invalid", "true");
+    const error = document.createElement("p");
+    error.className = "field-error";
+    error.id = `${field.id}-error`;
+    error.textContent = message;
+    if (message === outsideAreaMessage) addContactLinks(error);
+    field.insertAdjacentElement("afterend", error);
+    field.setAttribute(
+      "aria-describedby",
+      `${field.getAttribute("aria-describedby") || ""} ${error.id}`.trim(),
+    );
+    return true;
+  }
+
   function validateFields(fieldset) {
     let firstInvalid;
     fieldset.querySelectorAll("input, select, textarea").forEach((field) => {
-      clearError(field);
-      const message = fieldError(field);
-      if (!message) return;
-      field.setAttribute("aria-invalid", "true");
-      const error = document.createElement("p");
-      error.className = "field-error";
-      error.id = `${field.id}-error`;
-      error.textContent = message;
-      field.insertAdjacentElement("afterend", error);
-      field.setAttribute(
-        "aria-describedby",
-        `${field.getAttribute("aria-describedby") || ""} ${error.id}`.trim(),
-      );
-      firstInvalid ||= field;
+      if (showFieldError(field)) firstInvalid ||= field;
     });
     firstInvalid?.focus();
     return !firstInvalid;
@@ -300,6 +337,11 @@
     form.querySelectorAll("input, select, textarea").forEach((field) => {
       field.addEventListener("input", () => clearError(field));
       field.addEventListener("change", () => clearError(field));
+      if (field.name === "zip") {
+        field.addEventListener("blur", () => {
+          if (field.value.trim()) showFieldError(field);
+        });
+      }
     });
 
     form.addEventListener("keydown", (event) => {
@@ -408,7 +450,7 @@
     });
   });
 
-  // Coverage is confirmed by the business, not inferred from placeholder ZIP lists.
+  // Exact owner-supplied coverage; do not infer service from ZIP prefixes.
   const areaForm = document.getElementById("area-form");
   const zipInput = document.getElementById("zipcode");
   const zipResult = document.getElementById("zip-result");
@@ -416,14 +458,23 @@
   areaForm.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!areaForm.reportValidity()) return;
-    const zip = zipInput.value.trim();
+    const coverage = serviceAreas.checkZip(zipInput.value);
+    zipContinue.hidden = true;
+    if (!coverage.served) {
+      zipInput.setAttribute("aria-invalid", "true");
+      zipResult.textContent = outsideAreaMessage;
+      addContactLinks(zipResult);
+      return;
+    }
+    zipInput.removeAttribute("aria-invalid");
     controllers.get(bookingForm).setStep(1, false);
-    bookingForm.elements.zip.value = zip;
+    bookingForm.elements.zip.value = coverage.zip;
     clearError(bookingForm.elements.zip);
-    zipResult.textContent = `ZIP ${zip} added to your request. Our team will confirm coverage and availability with your quote.`;
+    zipResult.textContent = `Yes! We serve ${coverage.zip} (${coverage.areas.join(" / ")}). Continue to your free quote; appointment availability is confirmed separately.`;
     zipContinue.hidden = false;
   });
   zipInput.addEventListener("input", () => {
+    zipInput.removeAttribute("aria-invalid");
     zipResult.textContent = "";
     zipContinue.hidden = true;
   });
