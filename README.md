@@ -66,7 +66,7 @@ The suite covers links and assets, both form steps, validation, Enter-key behavi
 
 ## Assets
 
-- `clean-living-room.jpg`: AI-generated editorial-style interior image; illustrative, not a photo of a client's home.
+- `clean-living-room.jpg` and `gallery-*.jpg`: AI-generated editorial-style interiors; illustrative, not photos of client work. The gallery includes an explicit disclosure.
 - Manrope font: SIL Open Font License, included in `assets/fonts/LICENSE`.
 - Google and Instagram SVGs: original brand artwork from [SVGL](https://github.com/pheralb/svgl), with repository license in `assets/BRAND-ICONS-LICENSE.txt`. Brand trademarks belong to their respective owners; use does not imply affiliation.
 - Service/interface icons: inline SVG line artwork, with no external icon-font dependency.
@@ -99,3 +99,21 @@ scripts still load on desktop and mobile. Merge the fix into `main` to publish;
 changes on a working branch do not update the live site. When checking a release,
 wait for the Pages deployment to finish and refresh the page. If a browser still
 shows an older document, use a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).
+
+## Gallery and popup layout
+
+- The gallery is linked from the navigation and footer and contains living-room,
+  kitchen, bathroom, and bedroom imagery. Replace these illustrative files with
+  approved, consented client photos when available; update alt text and remove
+  the AI disclosure only when it no longer applies.
+- Clicking a gallery tile opens a native modal lightbox with next/previous
+  buttons, wrapping Arrow-key navigation, Escape/backdrop dismissal, focus
+  trapping, and focus return. A gallery session suppresses the timed offer so
+  dialogs cannot interrupt each other.
+- All Google profile/Maps buttons link to
+  `https://maps.app.goo.gl/nM1auwHershaoVy47`.
+- The offer popup uses a compact two-step layout. Optional phone/notes are in an
+  expandable section; both default steps fit common phone and desktop screens
+  without scrolling. Scrolling is retained when genuinely needed on short
+  screens, with a keyboard open, with expanded extras, or with validation errors;
+  content is never clipped just to hide the scrollbar.

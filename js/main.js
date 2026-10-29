@@ -5,6 +5,7 @@
   const navToggle = document.querySelector(".nav-toggle");
   const navMenu = document.querySelector(".nav-menu");
   const offerDialog = document.getElementById("offer-dialog");
+  const galleryDialog = document.getElementById("gallery-lightbox");
   const bookingForm = document.getElementById("booking-form");
   const serviceNames = {
     residential: "Residential cleaning",
@@ -80,6 +81,7 @@
     // Don't steal focus while visitors are typing or navigating the mobile menu.
     if (
       document.activeElement?.matches("input, select, textarea") ||
+      galleryDialog.open ||
       navMenu.classList.contains("open")
     )
       return;
@@ -119,13 +121,16 @@
   document
     .querySelector(".dialog-close")
     .addEventListener("click", () => offerDialog.close());
-  offerDialog.addEventListener("close", () =>
-    document.body.classList.remove("dialog-open"),
+  offerDialog.addEventListener(
+    "close",
+    () =>
+      !document.querySelector("dialog[open]") &&
+      document.body.classList.remove("dialog-open"),
   );
-  offerDialog.addEventListener("keydown", (event) => {
+  function trapDialogFocus(event, dialog) {
     if (event.key !== "Tab") return;
     const focusable = [
-      ...offerDialog.querySelectorAll(
+      ...dialog.querySelectorAll(
         'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       ),
     ].filter(
@@ -141,7 +146,10 @@
       event.preventDefault();
       first.focus();
     }
-  });
+  }
+  offerDialog.addEventListener("keydown", (event) =>
+    trapDialogFocus(event, offerDialog),
+  );
   offerDialog.addEventListener("click", (event) => {
     const rect = offerDialog.getBoundingClientRect();
     if (
@@ -153,6 +161,66 @@
     ) {
       offerDialog.close();
     }
+  });
+
+  // Gallery uses native modal semantics with explicit keyboard navigation.
+  const galleryItems = [...document.querySelectorAll("[data-gallery-index]")];
+  const lightboxImage = document.getElementById("lightbox-image");
+  const lightboxTitle = document.getElementById("lightbox-title");
+  const lightboxCounter = document.getElementById("lightbox-counter");
+  let galleryIndex = 0;
+
+  function showGalleryImage(index) {
+    galleryIndex = (index + galleryItems.length) % galleryItems.length;
+    const item = galleryItems[galleryIndex];
+    const image = item.querySelector("img");
+    lightboxImage.src = image.getAttribute("src");
+    lightboxImage.alt = image.alt;
+    lightboxTitle.textContent = item.querySelector("strong").textContent;
+    lightboxCounter.textContent = `${galleryIndex + 1} / ${galleryItems.length}`;
+  }
+
+  galleryItems.forEach((item, index) => {
+    item.addEventListener("click", () => {
+      // Do not interrupt an image-viewing session with the timed offer.
+      clearTimeout(offerTimer);
+      autoOfferDue = false;
+      showGalleryImage(index);
+      galleryDialog.showModal();
+      document.body.classList.add("dialog-open");
+      galleryDialog.querySelector(".lightbox-close").focus();
+    });
+  });
+  galleryDialog
+    .querySelector(".lightbox-close")
+    .addEventListener("click", () => galleryDialog.close());
+  galleryDialog
+    .querySelector(".lightbox-prev")
+    .addEventListener("click", () => showGalleryImage(galleryIndex - 1));
+  galleryDialog
+    .querySelector(".lightbox-next")
+    .addEventListener("click", () => showGalleryImage(galleryIndex + 1));
+  galleryDialog.addEventListener("keydown", (event) => {
+    trapDialogFocus(event, galleryDialog);
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      showGalleryImage(galleryIndex + (event.key === "ArrowRight" ? 1 : -1));
+    }
+  });
+  galleryDialog.addEventListener("close", () => {
+    if (!document.querySelector("dialog[open]"))
+      document.body.classList.remove("dialog-open");
+  });
+  galleryDialog.addEventListener("click", (event) => {
+    const rect = galleryDialog.getBoundingClientRect();
+    if (
+      event.target === galleryDialog &&
+      (event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom)
+    )
+      galleryDialog.close();
   });
 
   function fieldError(field) {
@@ -215,6 +283,7 @@
 
     function setStep(step, focus = true) {
       currentStep = step;
+      form.closest("dialog")?.scrollTo({ top: 0 });
       ready.hidden = true;
       message.textContent = "";
       form.querySelector(".form-progress").hidden = false;
