@@ -1409,7 +1409,7 @@ fieldset {
 .btn-back:hover {
   background: var(--cream);
 }
-.email-notice {
+.submission-notice {
   font-size: 10px;
   line-height: 1.8;
   background: #f5f7f5;
@@ -1417,7 +1417,7 @@ fieldset {
   padding: 10px 12px;
   color: #63736a;
 }
-.email-notice .icon {
+.submission-notice .icon {
   width: 13px;
   height: 13px;
   margin-right: 4px;
@@ -2585,7 +2585,7 @@ fieldset {
     padding: 12px 15px;
     gap: 8px;
   }
-  .email-notice {
+  .submission-notice {
     font-size: 9px;
   }
   .request-ready > h3 {
@@ -2788,7 +2788,7 @@ fieldset {
   .form-heading > p {
     font-size: 11px;
   }
-  .email-notice {
+  .submission-notice {
     font-size: 10px;
   }
   .zip-input-group input {
@@ -3077,7 +3077,7 @@ fieldset {
   padding: 8px 10px;
   margin-bottom: 13px;
 }
-.offer-dialog .email-notice {
+.offer-dialog .submission-notice {
   font-size: 10px;
   line-height: 1.6;
   padding: 8px 10px;
@@ -3191,4 +3191,21 @@ fieldset {
   .offer-dialog .quote-form {
     padding-inline: 16px;
   }
+}
+
+.delivery-note {
+  font-size: 11px;
+  line-height: 1.8;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--muted);
+}
+.quote-form[aria-busy="true"] {
+  cursor: progress;
+}
+.quote-form button:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }

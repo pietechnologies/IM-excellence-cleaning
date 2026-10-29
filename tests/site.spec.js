@@ -82,15 +82,11 @@ test("main quote validates both steps and preserves values when going back", asy
   await page.locator("#booking-email").fill("alex@example.com");
   await form.locator('button[type="submit"]').click();
   await expect(form.locator(".request-ready")).toBeVisible();
-  const draft = decodeURIComponent(
-    await form.locator("[data-email-link]").getAttribute("href"),
+  await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
+  await expect(form.locator("[data-delivery-note]")).toContainText(
+    "has not been sent",
   );
-  expect(draft).toContain("mailto:hello@imexcellencecleaning.com");
-  expect(draft).toContain("Service: Deep cleaning");
-  expect(draft).toContain("Name: Alex Smith");
-  await expect(form.locator(".request-ready")).toContainText(
-    "not confirmed until we reply",
-  );
+  await expect(form.locator('a[href^="mailto:"]')).toHaveCount(0);
   await form.locator("[data-edit]").click();
   await expect(page.locator("#booking-email")).toHaveValue("alex@example.com");
 });
@@ -236,10 +232,10 @@ for (const width of [390, 1440]) {
 }
 
 for (const [random, delay] of [
-  [0, 10000],
-  [0.999999, 15000],
+  [0, 5000],
+  [0.999999, 7000],
 ]) {
-  test(`offer automatically appears after ${delay / 1000} seconds, only once per session`, async ({
+  test(`offer automatically appears after ${delay / 1000} seconds on every page load and refresh`, async ({
     page,
   }) => {
     await page.clock.install({ time: new Date("2026-10-29T00:00:00Z") });
@@ -259,9 +255,13 @@ for (const [random, delay] of [
     await page.clock.fastForward(30000);
     await expect(page.locator("#offer-dialog")).not.toBeVisible();
     await page.reload();
-    await page.clock.fastForward(20000);
+    await page.clock.fastForward(delay - 1);
     await expect(page.locator("#offer-dialog")).not.toBeVisible();
-    await page.locator("[data-open-offer]").click();
+    await page.clock.fastForward(1);
+    await expect(page.locator("#offer-dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.goto("/");
+    await page.clock.fastForward(delay);
     await expect(page.locator("#offer-dialog")).toBeVisible();
   });
 }
@@ -475,10 +475,12 @@ for (const [width, height] of [
       .locator("#offer-notes")
       .fill("Please pay extra attention to the kitchen.");
     await completeDetails(page, "offer");
-    const draft = decodeURIComponent(
-      await page.locator("#offer-form [data-email-link]").getAttribute("href"),
+    await expect(page.locator("#offer-form .request-ready h3")).toHaveText(
+      "Thank you!",
     );
-    expect(draft).toContain("Please pay extra attention to the kitchen.");
+    await expect(page.locator("#offer-notes")).toHaveValue(
+      "Please pay extra attention to the kitchen.",
+    );
     await expect(page.locator("#offer-form .request-ready")).toBeVisible();
   });
 }
@@ -508,4 +510,100 @@ test("timed offer does not stack over the gallery lightbox", async ({
   await page.clock.fastForward(20000);
   await expect(page.locator("#gallery-lightbox")).toBeVisible();
   await expect(page.locator("#offer-dialog")).not.toBeVisible();
+});
+
+async function configureSubmission(page) {
+  await page.route("**/", async (route) => {
+    if (!route.request().isNavigationRequest()) return route.continue();
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      body: (await response.text()).replace(
+        'name="cleaning-form-endpoint" content=""',
+        'name="cleaning-form-endpoint" content="/api/enquiries"',
+      ),
+    });
+  });
+}
+
+for (const prefix of ["booking", "offer"]) {
+  test(`${prefix} form shows thank you only after a configured endpoint accepts the request`, async ({
+    page,
+  }) => {
+    await configureSubmission(page);
+    let received;
+    await page.route("**/api/enquiries", async (route) => {
+      received = route.request().postDataJSON();
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: '{"accepted":true}',
+      });
+    });
+    await page.goto("/");
+    if (prefix === "offer") await page.locator("[data-open-offer]").click();
+    await completeSpace(page, prefix);
+    if (prefix === "offer")
+      await page.locator(".offer-additional summary").click();
+    await page.locator(`#${prefix}-notes`).fill("Kitchen needs attention");
+    await completeDetails(page, prefix);
+    const form = page.locator(`#${prefix}-form`);
+    await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
+    await expect(form.locator("[data-thank-you-message]")).toContainText(
+      "Your request has been received",
+    );
+    await expect(form.locator("[data-delivery-note]")).toBeHidden();
+    expect(received).toMatchObject({
+      service: "deep",
+      zip: "10001",
+      name: "Alex Smith",
+      email: "alex@example.com",
+      notes: "Kitchen needs attention",
+      source: `${prefix}-form`,
+    });
+    await expect(form).not.toContainText(
+      /open email|email draft|copy request/i,
+    );
+    const { default: AxeBuilder } = require("@axe-core/playwright");
+    const audit = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(audit.violations).toEqual([]);
+  });
+}
+
+test("failed delivery preserves details, shows an error, and permits retry", async ({
+  page,
+}) => {
+  await configureSubmission(page);
+  let attempts = 0;
+  await page.route("**/api/enquiries", async (route) => {
+    attempts++;
+    await route.fulfill({ status: attempts === 1 ? 500 : 201, body: "{}" });
+  });
+  await page.goto("/");
+  await completeSpace(page);
+  await completeDetails(page);
+  const form = page.locator("#booking-form");
+  await expect(form.locator(".form-message")).toContainText("couldn’t send");
+  await expect(form.locator(".request-ready")).toBeHidden();
+  await expect(page.locator("#booking-email")).toHaveValue("alex@example.com");
+  await form.locator('button[type="submit"]').click();
+  await expect(form.locator("[data-thank-you-message]")).toContainText(
+    "has been received",
+  );
+  expect(attempts).toBe(2);
+});
+
+test("old session flags do not suppress the popup on a new load", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-29T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-29T00:00:01Z"));
+  await page.addInitScript(() =>
+    sessionStorage.setItem("imex_offer_shown", "1"),
+  );
+  await page.goto("/");
+  await page.clock.fastForward(7000);
+  await expect(page.locator("#offer-dialog")).toBeVisible();
 });

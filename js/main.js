@@ -13,7 +13,11 @@
     move: "Move-in / move-out",
     commercial: "Commercial cleaning",
   };
-  const emailAddress = "hello@imexcellencecleaning.com";
+  // Configure an HTTPS JSON POST endpoint to enable real request delivery.
+  const submissionEndpoint =
+    document
+      .querySelector('meta[name="cleaning-form-endpoint"]')
+      ?.content.trim() || "";
   const controllers = new Map();
 
   function closeMenu(returnFocus = false) {
@@ -47,19 +51,10 @@
       if (event.matches) closeMenu();
     });
 
-  // Show the offer once per tab session, 10–15 seconds after arrival.
-  // Storage may be blocked in private/embedded browsers; the in-memory flag
-  // still prevents repeated automatic popups on the current page.
-  const offerSessionKey = "imex_offer_shown";
+  // Fresh page-local timer on every load/refresh; no session or local storage.
   let offerShown = false;
   let autoOfferDue = false;
-  let formStarted = false;
   let offerTimer;
-  try {
-    offerShown = sessionStorage.getItem(offerSessionKey) === "1";
-  } catch {
-    // Keep the popup functional even when browser storage is unavailable.
-  }
 
   function openOffer() {
     if (offerDialog.open) return;
@@ -69,15 +64,10 @@
     offerDialog.showModal();
     document.body.classList.add("dialog-open");
     offerShown = true;
-    try {
-      sessionStorage.setItem(offerSessionKey, "1");
-    } catch {
-      // The in-memory flag is sufficient for this page view.
-    }
   }
 
   function maybeOpenAutoOffer() {
-    if (!autoOfferDue || offerShown || formStarted || document.hidden) return;
+    if (!autoOfferDue || offerShown || document.hidden) return;
     // Don't steal focus while visitors are typing or navigating the mobile menu.
     if (
       document.activeElement?.matches("input, select, textarea") ||
@@ -88,13 +78,15 @@
     openOffer();
   }
 
-  if (!offerShown) {
-    const delay = 10000 + Math.floor(Math.random() * 5001);
+  function scheduleOffer() {
+    const delay = 5000 + Math.floor(Math.random() * 2001);
     offerTimer = setTimeout(() => {
       autoOfferDue = true;
       maybeOpenAutoOffer();
     }, delay);
   }
+  if (document.readyState === "complete") scheduleOffer();
+  else window.addEventListener("load", scheduleOffer, { once: true });
   document.addEventListener("visibilitychange", maybeOpenAutoOffer);
   document.addEventListener("focusout", () => {
     // Let the browser update the active element before checking focus.
@@ -103,17 +95,6 @@
   document.addEventListener("click", () => {
     if (autoOfferDue) maybeOpenAutoOffer();
   });
-  document.querySelectorAll("#booking-form, #area-form").forEach((form) => {
-    const stopAutoOffer = () => {
-      formStarted = true;
-      autoOfferDue = false;
-      clearTimeout(offerTimer);
-    };
-    form.addEventListener("input", stopAutoOffer);
-    form.addEventListener("change", stopAutoOffer);
-    form.addEventListener("submit", stopAutoOffer);
-  });
-
   // Native dialog provides focus trapping, Escape dismissal and focus restoration.
   document.querySelectorAll("[data-open-offer]").forEach((button) => {
     button.addEventListener("click", openOffer);
@@ -182,9 +163,7 @@
 
   galleryItems.forEach((item, index) => {
     item.addEventListener("click", () => {
-      // Do not interrupt an image-viewing session with the timed offer.
-      clearTimeout(offerTimer);
-      autoOfferDue = false;
+      // Keep the timer pending, but never stack the offer over the viewer.
       showGalleryImage(index);
       galleryDialog.showModal();
       document.body.classList.add("dialog-open");
@@ -208,6 +187,7 @@
     }
   });
   galleryDialog.addEventListener("close", () => {
+    if (autoOfferDue) setTimeout(maybeOpenAutoOffer, 0);
     if (!document.querySelector("dialog[open]"))
       document.body.classList.remove("dialog-open");
   });
@@ -279,7 +259,7 @@
     const message = form.querySelector(".form-message");
     const ready = form.querySelector(".request-ready");
     let currentStep = 1;
-    let draftBody = "";
+    let submitting = false;
 
     function setStep(step, focus = true) {
       currentStep = step;
@@ -333,7 +313,7 @@
       }
     });
 
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       // Enter in a step-one input should advance, never bypass validation.
       if (currentStep === 1) {
@@ -346,26 +326,64 @@
         return;
       }
       if (!validateFields(steps[1])) return;
-      const value = (name) => form.elements[name].value.trim();
-      draftBody = [
-        "Hello IM Excellence Cleaning,",
-        "",
-        "I would like a free cleaning quote.",
-        "",
-        `Service: ${serviceNames[value("service")]}`,
-        `ZIP code: ${value("zip")}`,
-        `Frequency: ${value("frequency")}`,
-        `Name: ${value("name")}`,
-        `Email: ${value("email")}`,
-        `Phone: ${value("phone") || "Not provided"}`,
-        `Notes: ${value("notes") || "None"}`,
-        "",
-        "I am interested in the 10% new-client offer, if eligible.",
-        "Please confirm service coverage, pricing and availability. Thank you!",
-      ].join("\n");
-      const subject = `Cleaning quote request — ${serviceNames[value("service")]}`;
-      form.querySelector("[data-email-link]").href =
-        `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftBody)}`;
+      if (submitting) return;
+      const payload = Object.fromEntries(
+        [
+          ...form.querySelectorAll("input[name], select[name], textarea[name]"),
+        ].map((field) => [field.name, field.value.trim()]),
+      );
+      payload.source = form.id;
+      const submitButton = form.querySelector('button[type="submit"]');
+      const buttonLabel = submitButton.innerHTML;
+      message.textContent = "";
+      if (submissionEndpoint) {
+        submitting = true;
+        form.setAttribute("aria-busy", "true");
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting…";
+        // Freeze inputs while sending so the UI continues to match the payload.
+        steps.forEach((fieldset) => {
+          fieldset.disabled = true;
+        });
+        try {
+          const endpoint = new URL(submissionEndpoint, window.location.href);
+          if (
+            endpoint.protocol !== "https:" &&
+            endpoint.origin !== window.location.origin
+          ) {
+            throw new Error("An HTTPS endpoint is required.");
+          }
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(15000),
+          });
+          if (!response.ok) throw new Error("Submission failed.");
+        } catch {
+          steps[currentStep - 1].disabled = false;
+          message.textContent =
+            "We couldn’t send your request. Please try again. Your details are still here.";
+          return;
+        } finally {
+          submitting = false;
+          form.removeAttribute("aria-busy");
+          submitButton.disabled = false;
+          submitButton.innerHTML = buttonLabel;
+        }
+      }
+      ready.querySelector("h3").textContent = "Thank you!";
+      ready.querySelector("[data-thank-you-message]").textContent =
+        submissionEndpoint
+          ? "Your request has been received. Our team will be in touch to confirm pricing and availability."
+          : "Thank you for your interest in IM Excellence Cleaning.";
+      const deliveryNote = ready.querySelector("[data-delivery-note]");
+      deliveryNote.hidden = Boolean(submissionEndpoint);
+      deliveryNote.textContent =
+        "Online request delivery is not connected yet. Your request has not been sent.";
       steps.forEach((fieldset) => {
         fieldset.hidden = true;
         fieldset.disabled = true;
@@ -375,17 +393,6 @@
       const heading = ready.querySelector("h3");
       heading.setAttribute("tabindex", "-1");
       heading.focus({ preventScroll: true });
-    });
-
-    form.querySelector("[data-copy]").addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(draftBody);
-        message.textContent =
-          "Request copied. Paste it into an email and send it to hello@imexcellencecleaning.com.";
-      } catch {
-        message.textContent =
-          "Clipboard access is unavailable. Use the email draft button, or email hello@imexcellencecleaning.com directly.";
-      }
     });
 
     setStep(1, false);
