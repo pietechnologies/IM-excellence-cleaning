@@ -19,7 +19,7 @@ Open http://localhost:3000. The preview server accepts proxy hosts and does not 
 - Working booking anchors; service-card links preselect the matching service.
 - Main quote form and timed new-client offer dialog both use **two steps**:
   1. Service, ZIP code, and frequency.
-  2. Contact information and optional notes.
+  2. Required name, email and phone number, plus optional notes.
 - Per-step validation, inline errors, progress, back navigation, preserved values, and an inline thank-you state.
 - Accessible mobile navigation, keyboard-friendly FAQ, focus-managed modal, reduced-motion support, and a 5–7 second offer popup on every page load and refresh.
 
@@ -29,8 +29,11 @@ Both forms validate their two steps and display an inline **Thank you!** screen.
 There are no email-app, draft, or copy-request instructions in either form.
 
 **No live submission service is configured in this repository.** With the endpoint
-blank, the thank-you screen explicitly states that delivery is not connected and
-no request was sent. It does not falsely confirm receipt or an appointment.
+blank, the final screen simply thanks the visitor for their interest. It does not
+claim receipt or a confirmed appointment. The on-page disconnected-service notice
+and the “Back to my details” button have been removed as requested. The generic
+thank-you screen does not itself deliver or store a lead; configure the endpoint
+below before relying on these forms to receive real requests.
 
 To receive actual enquiries, set the `cleaning-form-endpoint` meta tag in
 `index.html` to your verified JSON POST endpoint (HTTPS for external services):
@@ -153,7 +156,7 @@ shows an older document, use a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).
   dialogs cannot interrupt each other.
 - All Google profile/Maps buttons link to
   `https://maps.app.goo.gl/nM1auwHershaoVy47`.
-- The offer popup uses a compact two-step layout. Optional phone/notes are in an
+- The offer popup uses a compact two-step layout. Phone is required and always visible on step two; optional notes are in an
   expandable section; both default steps fit common phone and desktop screens
   without scrolling. Scrolling is retained when genuinely needed on short
   screens, with a keyboard open, with expanded extras, or with validation errors;
@@ -171,3 +174,9 @@ Call/Text actions appear by the hero, booking form, service area, footer, and
 unsupported-ZIP errors. Coverage does not guarantee an available appointment;
 pricing and dates are still confirmed by the team. Form delivery configuration
 and the 5–7 second per-load popup behavior are unchanged.
+
+Phone is required in both forms, with `type="tel"`, telephone autofill, a visible
+required indicator, and inline checks for 7–15 digits (common spaces, parentheses,
+dashes, dots and a leading plus sign are accepted). Server-side validation must
+also require and validate the phone value. The final thank-you state has no edit
+button; the Back button within step two remains available before submitting.

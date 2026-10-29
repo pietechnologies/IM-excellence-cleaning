@@ -244,6 +244,16 @@
       if (!coverage.valid) return "Enter a valid 5-digit ZIP code.";
       if (!coverage.served) return outsideAreaMessage;
     }
+    if (field.name === "phone") {
+      const digits = value.replace(/\D/g, "");
+      if (
+        !/^\+?[\d\s().-]+$/.test(value) ||
+        digits.length < 7 ||
+        digits.length > 15
+      ) {
+        return "Please enter a valid phone number (7–15 digits).";
+      }
+    }
     if (field.name === "name" && value.length < 2)
       return "Please enter at least 2 characters.";
     if (field.type === "email" && field.validity.typeMismatch)
@@ -330,9 +340,6 @@
     form
       .querySelector("[data-back]")
       .addEventListener("click", () => setStep(1));
-    form
-      .querySelector("[data-edit]")
-      .addEventListener("click", () => setStep(2));
 
     form.querySelectorAll("input, select, textarea").forEach((field) => {
       field.addEventListener("input", () => clearError(field));
@@ -422,10 +429,6 @@
         submissionEndpoint
           ? "Your request has been received. Our team will be in touch to confirm pricing and availability."
           : "Thank you for your interest in IM Excellence Cleaning.";
-      const deliveryNote = ready.querySelector("[data-delivery-note]");
-      deliveryNote.hidden = Boolean(submissionEndpoint);
-      deliveryNote.textContent =
-        "Online request delivery is not connected yet. Your request has not been sent.";
       steps.forEach((fieldset) => {
         fieldset.hidden = true;
         fieldset.disabled = true;

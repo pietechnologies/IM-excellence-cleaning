@@ -8,6 +8,7 @@ async function completeSpace(page, prefix = "booking") {
 async function completeDetails(page, prefix = "booking") {
   await page.locator(`#${prefix}-name`).fill("Alex Smith");
   await page.locator(`#${prefix}-email`).fill("alex@example.com");
+  await page.locator(`#${prefix}-phone`).fill("(813) 316-8298");
   await page.locator(`#${prefix}-form button[type="submit"]`).click();
 }
 
@@ -94,15 +95,13 @@ test("main quote validates both steps and preserves values when going back", asy
     "true",
   );
   await page.locator("#booking-email").fill("alex@example.com");
+  await page.locator("#booking-phone").fill("(813) 316-8298");
   await form.locator('button[type="submit"]').click();
   await expect(form.locator(".request-ready")).toBeVisible();
   await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
-  await expect(form.locator("[data-delivery-note]")).toContainText(
-    "has not been sent",
-  );
+  await expect(form.locator("[data-delivery-note]")).toHaveCount(0);
   await expect(form.locator('a[href^="mailto:"]')).toHaveCount(0);
-  await form.locator("[data-edit]").click();
-  await expect(page.locator("#booking-email")).toHaveValue("alex@example.com");
+  await expect(form.locator("[data-edit]")).toHaveCount(0);
 });
 
 test("Enter in step one advances rather than submitting prematurely", async ({
@@ -564,12 +563,13 @@ for (const prefix of ["booking", "offer"]) {
     await expect(form.locator("[data-thank-you-message]")).toContainText(
       "Your request has been received",
     );
-    await expect(form.locator("[data-delivery-note]")).toBeHidden();
+    await expect(form.locator("[data-delivery-note]")).toHaveCount(0);
     expect(received).toMatchObject({
       service: "deep",
       zip: "33602",
       name: "Alex Smith",
       email: "alex@example.com",
+      phone: "(813) 316-8298",
       notes: "Kitchen needs attention",
       source: `${prefix}-form`,
     });
@@ -765,6 +765,7 @@ for (const prefix of ["booking", "offer"]) {
     await form.locator("[data-next]").click();
     await page.locator(`#${prefix}-name`).fill("Alex Smith");
     await page.locator(`#${prefix}-email`).fill("alex@example.com");
+    await page.locator(`#${prefix}-phone`).fill("(813) 316-8298");
     // A hidden/disabled first-step input must not bypass the final validation.
     await page.locator(`#${prefix}-zip`).evaluate((field) => {
       field.value = "33601";
@@ -815,5 +816,48 @@ for (const width of [375, 768, 1440]) {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+  });
+}
+
+for (const prefix of ["booking", "offer"]) {
+  test(`${prefix} requires a visible valid phone number and has a clean thank-you screen`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    if (prefix === "offer") await page.locator("[data-open-offer]").click();
+    await completeSpace(page, prefix);
+    const form = page.locator(`#${prefix}-form`);
+    const phone = page.locator(`#${prefix}-phone`);
+    await expect(phone).toBeVisible();
+    await expect(phone).toHaveAttribute("required", "");
+    if (prefix === "offer")
+      await expect(page.locator(".offer-additional")).not.toHaveAttribute(
+        "open",
+        "",
+      );
+    await page.locator(`#${prefix}-name`).fill("Alex Smith");
+    await page.locator(`#${prefix}-email`).fill("alex@example.com");
+    await form.locator('button[type="submit"]').click();
+    await expect(phone).toBeFocused();
+    await expect(phone).toHaveAttribute("aria-invalid", "true");
+    await expect(form.locator(".request-ready")).toBeHidden();
+    for (const invalid of ["123", "abcdefghi", "-------", "1234567890123456"]) {
+      await phone.fill(invalid);
+      await form.locator('button[type="submit"]').click();
+      await expect(page.locator(`#${prefix}-phone-error`)).toContainText(
+        "valid phone number",
+      );
+      await expect(form.locator(".request-ready")).toBeHidden();
+    }
+    await phone.fill("+1 (813) 316-8298");
+    await form.locator('button[type="submit"]').click();
+    await expect(form.locator(".request-ready h3")).toHaveText("Thank you!");
+    await expect(form.locator(".request-ready")).not.toContainText(
+      /not connected|has not been sent|back to my details|has been received/i,
+    );
+    await expect(form.locator("[data-edit], [data-delivery-note]")).toHaveCount(
+      0,
+    );
+    await expect(form.locator(".request-ready button")).toHaveCount(0);
   });
 }

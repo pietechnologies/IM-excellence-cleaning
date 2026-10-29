@@ -26,9 +26,9 @@
       crossorigin
     />
     <link rel="preload" href="assets/clean-living-room.jpg" as="image" />
-    <link rel="stylesheet" href="css/style.css?v=e0d5c2b27ed8" />
+    <link rel="stylesheet" href="css/style.css?v=50d2c35c06b7" />
     <script src="js/service-areas.js?v=9c6467dbc72b" defer></script>
-    <script src="js/main.js?v=0d32c1f536a9" defer></script>
+    <script src="js/main.js?v=a59132d8f003" defer></script>
   </head>
   <body>
     <a href="#content" class="skip-link">Skip to content</a>
@@ -1450,13 +1450,16 @@
                 </div>
                 <div class="form-group">
                   <label for="booking-phone"
-                    >Phone <span class="optional">(optional)</span></label
+                    >Phone <span aria-hidden="true">*</span></label
                   ><input
                     id="booking-phone"
                     name="phone"
                     type="tel"
                     autocomplete="tel"
                     placeholder="Your phone number"
+                    required
+                    minlength="7"
+                    maxlength="30"
                   />
                 </div>
               </div>
@@ -1497,10 +1500,6 @@
               <p data-thank-you-message>
                 Thank you for your interest in IM Excellence Cleaning.
               </p>
-              <p class="delivery-note" data-delivery-note></p>
-              <button type="button" class="btn btn-primary" data-edit>
-                Back to my details
-              </button>
             </div>
             <p class="privacy-note">
               <svg class="icon" width="24" height="24" aria-hidden="true">
@@ -1560,8 +1559,7 @@
               <p>
                 Complete our two-step form to tell us about your space. Our team
                 confirms pricing, service availability, and your preferred date
-                before an appointment is booked. Online delivery must be
-                connected before requests can be sent.
+                before an appointment is booked.
               </p>
             </details>
             <details>
@@ -1768,31 +1766,37 @@
               required
             />
           </div>
-          <div class="form-group">
-            <label for="offer-email"
-              >Email address <span aria-hidden="true">*</span></label
-            ><input
-              id="offer-email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-          <details class="offer-additional">
-            <summary>Add phone or notes <span>(optional)</span></summary>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="offer-email"
+                >Email address <span aria-hidden="true">*</span></label
+              ><input
+                id="offer-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="Your email"
+                required
+              />
+            </div>
             <div class="form-group">
               <label for="offer-phone"
-                >Phone <span class="optional">(optional)</span></label
+                >Phone <span aria-hidden="true">*</span></label
               ><input
                 id="offer-phone"
                 name="phone"
                 type="tel"
                 autocomplete="tel"
-                placeholder="Your phone number"
+                placeholder="Your phone"
+                required
+                minlength="7"
+                maxlength="30"
               />
             </div>
+          </div>
+          <details class="offer-additional">
+            <summary>Add a note <span>(optional)</span></summary>
+
             <div class="form-group">
               <label for="offer-notes"
                 >Anything else? <span class="optional">(optional)</span></label
@@ -1829,10 +1833,6 @@
           <p data-thank-you-message>
             Thank you for your interest in IM Excellence Cleaning.
           </p>
-          <p class="delivery-note" data-delivery-note></p>
-          <button type="button" class="btn btn-primary" data-edit>
-            Back to my details
-          </button>
         </div>
         <p class="privacy-note">
           <svg class="icon" width="24" height="24" aria-hidden="true">

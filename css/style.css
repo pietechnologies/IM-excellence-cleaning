@@ -3193,15 +3193,6 @@ fieldset {
   }
 }
 
-.delivery-note {
-  font-size: 14px;
-  line-height: 1.8;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--cream);
-  color: var(--muted);
-}
 .quote-form[aria-busy="true"] {
   cursor: progress;
 }
