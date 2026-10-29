@@ -378,3 +378,134 @@ for (const width of [390, 1440]) {
     expect(failed).toEqual([]);
   });
 }
+
+test("all Google profile links use the supplied Maps destination", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const links = page.locator(
+    'a[href="https://maps.app.goo.gl/nM1auwHershaoVy47"]',
+  );
+  await expect(links).toHaveCount(4);
+  await expect(page.locator('a[href*="share.google"]')).toHaveCount(0);
+  for (const link of await links.all()) {
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+});
+
+for (const width of [390, 1440]) {
+  test(`gallery lightbox supports navigation, focus and dismissal at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/IM-excellence-cleaning/");
+    const item = page.locator('[data-gallery-index="1"]');
+    await item.click();
+    const dialog = page.locator("#gallery-lightbox");
+    await expect(dialog).toBeVisible();
+    await expect(page.locator("#lightbox-title")).toHaveText("Kitchen");
+    await expect(page.locator("#lightbox-counter")).toHaveText("2 / 4");
+    await expect(page.locator("#lightbox-image")).toHaveAttribute(
+      "src",
+      "assets/gallery-kitchen.jpg",
+    );
+    await expect(page.locator(".lightbox-close")).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(page.locator(".lightbox-next")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#lightbox-title")).toHaveText("Bathroom");
+    await page.locator(".lightbox-prev").click();
+    await expect(page.locator("#lightbox-title")).toHaveText("Kitchen");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect(page.locator("#lightbox-counter")).toHaveText("4 / 4");
+    await page.locator(".lightbox-next").click();
+    await expect(page.locator("#lightbox-counter")).toHaveText("1 / 4");
+    expect(
+      await page
+        .locator("#lightbox-image")
+        .evaluate((img) => img.complete && img.naturalWidth > 0),
+    ).toBe(true);
+    const { default: AxeBuilder } = require("@axe-core/playwright");
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(results.violations).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
+    await expect(item).toBeFocused();
+    await expect(page.locator("body")).not.toHaveClass("dialog-open");
+    await item.click();
+    await page.locator(".lightbox-close").click();
+    await expect(dialog).not.toBeVisible();
+    await item.click();
+    await page.mouse.click(2, 2);
+    await expect(dialog).not.toBeVisible();
+  });
+}
+
+for (const [width, height] of [
+  [375, 667],
+  [390, 844],
+  [1440, 900],
+]) {
+  test(`both popup steps fit without scrolling at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/");
+    await page.locator("[data-open-offer]").click();
+    const checkFit = async () => {
+      const size = await page.locator("#offer-dialog").evaluate((dialog) => ({
+        scrollHeight: dialog.scrollHeight,
+        clientHeight: dialog.clientHeight,
+        top: dialog.getBoundingClientRect().top,
+        bottom: dialog.getBoundingClientRect().bottom,
+      }));
+      expect(size.scrollHeight).toBeLessThanOrEqual(size.clientHeight + 1);
+      expect(size.top).toBeGreaterThanOrEqual(0);
+      expect(size.bottom).toBeLessThanOrEqual(height);
+    };
+    await checkFit();
+    await completeSpace(page, "offer");
+    await checkFit();
+    await page.locator(".offer-additional summary").click();
+    await page
+      .locator("#offer-notes")
+      .fill("Please pay extra attention to the kitchen.");
+    await completeDetails(page, "offer");
+    const draft = decodeURIComponent(
+      await page.locator("#offer-form [data-email-link]").getAttribute("href"),
+    );
+    expect(draft).toContain("Please pay extra attention to the kitchen.");
+    await expect(page.locator("#offer-form .request-ready")).toBeVisible();
+  });
+}
+
+test("small-height popup remains scrollable and optional fields remain reachable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 480 });
+  await page.goto("/");
+  await page.locator("[data-open-offer]").click();
+  await completeSpace(page, "offer");
+  await page.locator(".offer-additional summary").click();
+  await page.locator("#offer-notes").fill("Small-screen request");
+  await completeDetails(page, "offer");
+  await expect(page.locator("#offer-form .request-ready")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body")).not.toHaveClass("dialog-open");
+});
+
+test("timed offer does not stack over the gallery lightbox", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-29T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-29T00:00:01Z"));
+  await page.goto("/");
+  await page.locator('[data-gallery-index="0"]').click();
+  await page.clock.fastForward(20000);
+  await expect(page.locator("#gallery-lightbox")).toBeVisible();
+  await expect(page.locator("#offer-dialog")).not.toBeVisible();
+});

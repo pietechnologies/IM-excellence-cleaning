@@ -2849,3 +2849,346 @@ fieldset {
     font-size: 11px;
   }
 }
+
+/* Inspiration gallery and accessible, image-first lightbox. */
+.gallery-section {
+  background: var(--cream);
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.gallery-item {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ink);
+  text-align: left;
+  isolation: isolate;
+}
+.gallery-item > img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.5;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.gallery-item::after {
+  content: "";
+  position: absolute;
+  inset: 30% 0 0;
+  background: linear-gradient(transparent, #10232de6);
+  pointer-events: none;
+}
+.gallery-item:hover > img {
+  transform: scale(1.035);
+}
+.gallery-item:focus-visible {
+  outline-offset: 5px;
+}
+.gallery-caption {
+  position: absolute;
+  left: 25px;
+  right: 25px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: white;
+  z-index: 1;
+}
+.gallery-caption strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+.gallery-caption small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: #fff;
+}
+.gallery-zoom {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #ffffff8a;
+  border-radius: 50%;
+  background: #172f3e70;
+  flex: none;
+}
+.gallery-zoom .icon {
+  width: 21px;
+  height: 21px;
+}
+.gallery-disclosure {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 11px;
+}
+.gallery-lightbox {
+  width: min(1100px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 18px;
+  border: 1px solid #ffffff24;
+  border-radius: 16px;
+  background: #132733;
+  color: white;
+  overflow: auto;
+  box-shadow: 0 25px 100px #0006;
+}
+.gallery-lightbox::backdrop {
+  background: #081822e8;
+  backdrop-filter: blur(7px);
+}
+.lightbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding-left: 7px;
+}
+.lightbox-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.lightbox-toolbar h2 {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+}
+#lightbox-counter {
+  color: #d8ee9b;
+  font-size: 12px;
+}
+.lightbox-control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ffffff60;
+  border-radius: 50%;
+  background: #172f3ee6;
+  color: white;
+  flex: none;
+}
+.lightbox-control:hover {
+  background: #314d59;
+}
+.lightbox-stage {
+  position: relative;
+}
+#lightbox-image {
+  display: block;
+  width: 100%;
+  height: min(65dvh, 650px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: #0d1c25;
+}
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.lightbox-prev {
+  left: 12px;
+}
+.lightbox-prev .icon {
+  transform: rotate(180deg);
+}
+.lightbox-next {
+  right: 12px;
+}
+#lightbox-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #d6e0df;
+  margin-top: 14px;
+}
+
+/* Compact offer layout: no unnecessary scrolling at normal viewport heights.
+   Retain overflow only for small screens, zoom, keyboards, and validation errors. */
+.offer-dialog {
+  width: min(560px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.offer-dialog .quote-form {
+  padding: 28px 28px 14px;
+}
+.offer-dialog .form-heading {
+  padding-right: 25px;
+}
+.offer-dialog .form-heading h3 {
+  font-size: 24px;
+}
+.offer-dialog .form-heading > p {
+  margin-top: 6px;
+  font-size: 11px;
+}
+.offer-dialog .form-progress {
+  margin: 17px 0 18px;
+}
+.offer-dialog .form-progress li {
+  padding-bottom: 10px;
+}
+.offer-dialog .form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.offer-dialog .form-group {
+  margin-bottom: 12px;
+}
+.offer-dialog .form-group label {
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+.offer-dialog .form-group input,
+.offer-dialog .form-group select,
+.offer-dialog .form-group textarea {
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.offer-dialog .form-group select {
+  padding-right: 28px;
+}
+.offer-dialog .form-perk {
+  margin: 0 0 14px;
+  padding: 9px 11px;
+}
+.offer-dialog .form-footnote {
+  margin-top: 8px;
+}
+.offer-dialog .form-summary {
+  padding: 8px 10px;
+  margin-bottom: 13px;
+}
+.offer-dialog .email-notice {
+  font-size: 10px;
+  line-height: 1.6;
+  padding: 8px 10px;
+}
+.offer-dialog .form-actions {
+  margin-top: 12px;
+}
+.offer-dialog .privacy-note {
+  margin-top: 13px;
+  padding-top: 11px;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.offer-dialog .offer-terms {
+  font-size: 9px;
+  line-height: 1.5;
+  padding: 0 24px 16px;
+}
+.offer-additional {
+  margin-bottom: 12px;
+}
+.offer-additional summary {
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 0 7px;
+}
+.offer-additional summary span {
+  font-weight: 400;
+  color: var(--muted);
+}
+.offer-additional .form-group {
+  margin: 3px 0 0;
+}
+@media (max-width: 640px) {
+  .gallery-grid {
+    gap: 16px;
+  }
+  .gallery-caption {
+    left: 16px;
+    right: 16px;
+    bottom: 15px;
+  }
+  .gallery-caption strong {
+    font-size: 17px;
+  }
+  .gallery-caption small {
+    font-size: 10px;
+  }
+  .gallery-zoom {
+    width: 36px;
+    height: 36px;
+  }
+  .gallery-disclosure {
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .gallery-lightbox {
+    padding: 12px;
+    width: calc(100% - 20px);
+  }
+  #lightbox-image {
+    height: min(60dvh, 540px);
+  }
+  .lightbox-toolbar {
+    gap: 10px;
+  }
+  .lightbox-toolbar > div {
+    gap: 10px;
+  }
+  .lightbox-toolbar h2 {
+    font-size: 16px;
+  }
+  #lightbox-hint {
+    font-size: 10px;
+  }
+  .lightbox-prev {
+    left: 7px;
+  }
+  .lightbox-next {
+    right: 7px;
+  }
+  .offer-dialog .quote-form {
+    padding: 27px 20px 12px;
+  }
+  .offer-dialog .form-heading h3 {
+    font-size: 22px;
+  }
+  .offer-dialog .form-group input,
+  .offer-dialog .form-group select,
+  .offer-dialog .form-group textarea {
+    font-size: 16px;
+  }
+  .offer-dialog .privacy-note {
+    font-size: 8px;
+  }
+}
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+  .gallery-caption strong {
+    font-size: 20px;
+  }
+}
+@media (max-width: 359px) {
+  .offer-dialog .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .offer-dialog .quote-form {
+    padding-inline: 16px;
+  }
+}
