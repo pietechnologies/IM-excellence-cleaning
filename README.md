@@ -20,16 +20,36 @@ Open http://localhost:3000. The preview server accepts proxy hosts and does not 
 - Main quote form and timed new-client offer dialog both use **two steps**:
   1. Service, ZIP code, and frequency.
   2. Contact information and optional notes.
-- Per-step validation, inline errors, progress, back navigation, preserved values, and an email-request review state.
-- Accessible mobile navigation, keyboard-friendly FAQ, focus-managed modal, reduced-motion support, and a once-per-session offer popup.
+- Per-step validation, inline errors, progress, back navigation, preserved values, and an inline thank-you state.
+- Accessible mobile navigation, keyboard-friendly FAQ, focus-managed modal, reduced-motion support, and a 5–7 second offer popup on every page load and refresh.
 
-## Important: form delivery
+## Form submission and thank-you messages
 
-There is **no submission backend in this repository**. No request is silently sent or stored.
+Both forms validate their two steps and display an inline **Thank you!** screen.
+There are no email-app, draft, or copy-request instructions in either form.
 
-After validation, both forms prepare a `mailto:` draft addressed to `hello@imexcellencecleaning.com`. Visitors review the request, select **Open email draft**, and send it in their own email app. A **Copy request** fallback is provided for visitors using webmail. The site makes clear that a booking is not confirmed until the business replies.
+**No live submission service is configured in this repository.** With the endpoint
+blank, the thank-you screen explicitly states that delivery is not connected and
+no request was sent. It does not falsely confirm receipt or an appointment.
 
-For automatic submissions, integrate a real form provider or backend with both forms in `js/main.js`; only display a delivery-success message after the server confirms receipt. Keep secrets out of client-side JavaScript. Confirm the recipient address is monitored before publishing.
+To receive actual enquiries, set the `cleaning-form-endpoint` meta tag in
+`index.html` to your verified JSON POST endpoint (HTTPS for external services):
+
+```html
+<meta name="cleaning-form-endpoint" content="" />
+```
+
+The endpoint receives `service`, `zip`, `frequency`, `name`, `email`, `phone`,
+`notes`, and `source` (`booking-form` or `offer-form`). Fields are trimmed and
+submitted together, including values from the hidden first step. Configure CORS
+when using an external endpoint. Do not put credentials in this tag or the client.
+The receiving service must validate input and apply spam/rate-limit protection.
+
+When configured, only a successful HTTP response shows the receipt confirmation:
+**Thank you! Your request has been received. Our team will be in touch to confirm
+pricing and availability.** Pending requests disable the controls; a failure or
+15-second timeout preserves the details and offers a retry rather than displaying
+success. Tests mock the endpoint; they do not verify a production receiving service.
 
 ## Coverage and business details
 
@@ -45,10 +65,17 @@ Existing testimonials and service/trust statements have been retained from the o
 
 - Colors, typography, breakpoints: `css/style.css`
 - Services, copy, business links, offer terms, and field labels: `index.html`
-- Email recipient, service labels, form behavior: `js/main.js`
+- Service labels and form behavior: `js/main.js`
 - Local image, favicon, brand icons, and fonts: `assets/`
 
-The promotional dialog appears automatically after a random **10–15 seconds**, once per tab session. It waits while the page is hidden or a visitor is typing or using the mobile menu, and skips the automatic popup if they have started a booking or ZIP enquiry. **Claim your offer** always opens it manually. Dismissing a manually opened offer cancels the automatic appearance. Only a shown/dismissed flag is saved in `sessionStorage`; form data stays in memory and is not saved to browser storage. When storage is blocked, the popup still works once per page view.
+The promotional dialog appears after a random **5–7 seconds on every full page
+load or refresh**. Dismissal applies to that page view only; no session/local
+storage flags are read or written. A new load starts a new timer even if an older
+version left a shown flag in storage. The pending offer waits while the page is
+hidden, a field is focused, the mobile menu is open, or the gallery is displayed.
+It appears when those interactions finish instead of stacking dialogs or stealing
+input focus. **Claim your offer** always opens it manually. Form values remain in
+memory only until refresh, unless sent to a configured submission service.
 
 ## Tests
 
@@ -62,7 +89,7 @@ npm test
 
 For an existing compatible Chromium executable, set `CHROMIUM_PATH=/path/to/chromium` when running tests. Playwright's test server uses loopback locally; browser-facing app code uses relative URLs only.
 
-The suite covers links and assets, both form steps, validation, Enter-key behavior, data preservation, mailto contents, service and ZIP prefilling, modal focus and Escape, mobile navigation, FAQ interaction, horizontal overflow at 320–1440px, and automated WCAG A/AA checks on desktop and mobile. Automated accessibility checks do not replace manual review.
+The suite covers links and assets, both form steps, validation, Enter-key behavior, data preservation, thank-you/delivery states, service and ZIP prefilling, modal focus and Escape, mobile navigation, FAQ interaction, horizontal overflow at 320–1440px, and automated WCAG A/AA checks on desktop and mobile. Automated accessibility checks do not replace manual review.
 
 ## Assets
 
@@ -108,7 +135,7 @@ shows an older document, use a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).
   the AI disclosure only when it no longer applies.
 - Clicking a gallery tile opens a native modal lightbox with next/previous
   buttons, wrapping Arrow-key navigation, Escape/backdrop dismissal, focus
-  trapping, and focus return. A gallery session suppresses the timed offer so
+  trapping, and focus return. The timed offer waits until the gallery closes so
   dialogs cannot interrupt each other.
 - All Google profile/Maps buttons link to
   `https://maps.app.goo.gl/nM1auwHershaoVy47`.
